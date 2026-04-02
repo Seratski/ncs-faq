@@ -25,7 +25,22 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .al{font-size:12px;color:rgba(255,255,255,0.4);cursor:pointer;padding:4px 8px;border-radius:var(--rs);transition:all .15s}
 .al:hover{color:#fff;background:rgba(255,255,255,0.1)}
 .main{max-width:900px;margin:0 auto;padding:28px 20px 80px}
-.fbar{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--bd)}
+.fbar{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--bd)}
+.gsearch-wrap{position:relative;margin-bottom:20px}
+.gsearch-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--hi);font-size:15px;pointer-events:none}
+.gsearch-inp{width:100%;padding:11px 36px 11px 40px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--s);border:1px solid var(--bds);border-radius:var(--r);color:var(--tx);outline:none;box-shadow:var(--sh);transition:all .15s}
+.gsearch-inp:focus{border-color:#f96700;box-shadow:0 0 0 3px rgba(249,103,0,0.1)}
+.gsearch-inp::placeholder{color:var(--hi)}
+.gsearch-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--hi);font-size:16px;padding:4px;line-height:1;display:none}
+.gsearch-clear.show{display:block}
+.gsearch-results{display:flex;flex-direction:column;gap:6px;margin-bottom:24px}
+.gsr-item{background:var(--s);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);cursor:pointer;transition:border-color .15s}
+.gsr-item:hover{border-color:#f96700}
+.gsr-camp{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--hi);padding:8px 16px 0}
+.gsr-q{font-size:14px;font-weight:500;padding:4px 16px 10px;line-height:1.4}
+.gsr-q mark{background:#fff3e0;color:#c45000;border-radius:2px;padding:0 1px}
+.gsr-count{font-size:12px;color:var(--hi);margin-bottom:10px}
+.gsr-empty{text-align:center;padding:32px 20px;color:var(--hi);font-size:14px}
 .fg{display:flex;align-items:center;gap:8px}
 .flabel{font-size:11px;font-weight:500;color:var(--hi);text-transform:uppercase;letter-spacing:.06em}
 .cbs{display:flex;border:1px solid var(--bds);border-radius:8px;overflow:hidden}
@@ -217,6 +232,11 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
       <div class="sat-wrap">
         <label class="sat"><input type="checkbox" onchange="toggleSA(this)"/> Show upcoming &amp; ended</label>
       </div>
+    </div>
+    <div class="gsearch-wrap">
+      <span class="gsearch-icon">⌕</span>
+      <input class="gsearch-inp" id="gsearch" placeholder="Search across all campaigns..." oninput="onGSearch()" autocomplete="off"/>
+      <button class="gsearch-clear" id="gsearch-clear" onclick="clearGSearch()">✕</button>
     </div>
     <div id="rcontent"></div>
   </div>
@@ -485,7 +505,64 @@ function progress(c,mkt){
 function setLang(l,b){rLang=l;document.querySelectorAll('.lb').forEach(x=>x.classList.remove('active'));b&&b.classList.add('active');renderR();}
 function setMarket(m,b){rMarket=m;document.querySelectorAll('.cb').forEach(x=>x.classList.remove('active'));b&&b.classList.add('active');if(rView==='faqs')rView='list';renderR();}
 function toggleSA(chk){rShowAll=chk.checked;renderR();}
-function renderR(){const el=document.getElementById('rcontent');if(!el)return;rView==='list'?renderList(el):renderFaqs(el);}
+function renderR(){
+  const el=document.getElementById('rcontent');if(!el)return;
+  const q=(document.getElementById('gsearch')?.value||'').trim();
+  if(q.length>=2&&rView==='list'){renderGlobalSearch(el,q);return;}
+  rView==='list'?renderList(el):renderFaqs(el);
+}
+function onGSearch(){
+  const q=document.getElementById('gsearch').value.trim();
+  document.getElementById('gsearch-clear').classList.toggle('show',q.length>0);
+  renderR();
+}
+function clearGSearch(){
+  document.getElementById('gsearch').value='';
+  document.getElementById('gsearch-clear').classList.remove('show');
+  renderR();
+}
+function highlight(text,q){
+  if(!q||!text)return esc(text||'');
+  const re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+  return esc(text).replace(re,'<mark>$1</mark>');
+}
+function renderGlobalSearch(el,q){
+  const ql=q.toLowerCase();
+  const results=[];
+  Object.entries(D.campaigns).forEach(([cid,c])=>{
+    if(!isPublishedToReaders(c))return;
+    if(!campMatchMkt(c,rMarket))return;
+    Object.entries(D.faqs).filter(([,f])=>f.campaignId===cid&&f.status==='published'&&faqMatchMkt(f,rMarket)).forEach(([fid,f])=>{
+      const t=(f.translations&&(f.translations[rLang]||f.translations.en))||{};
+      const qText=t.q||'',aText=t.a||'';
+      if(qText.toLowerCase().includes(ql)||aText.toLowerCase().includes(ql)){
+        results.push({cid,fid,campName:c.name,q:qText,a:aText});
+      }
+    });
+  });
+  let h=`<div class="gsr-count">${results.length} result${results.length!==1?'s':''} for "<strong>${esc(q)}</strong>"</div>`;
+  if(!results.length){
+    h+='<div class="gsr-empty">No questions found matching your search.</div>';
+  }else{
+    h+='<div class="gsearch-results">';
+    results.forEach(r=>{
+      h+=`<div class="gsr-item" onclick="openFromSearch('${r.cid}','${r.fid}')">
+        <div class="gsr-camp">${esc(r.campName)}</div>
+        <div class="gsr-q">${highlight(r.q,q)}</div>
+      </div>`;
+    });
+    h+='</div>';
+  }
+  el.innerHTML=h;
+}
+function openFromSearch(cid,fid){
+  clearGSearch();
+  rCampId=cid;rView='faqs';rCat='all';
+  rOpen=new Set([fid]);
+  renderR();
+  window.scrollTo(0,0);
+  setTimeout(()=>{const el=document.getElementById('rc-'+fid);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},120);
+}
 
 function renderList(el){
   const all=Object.entries(D.campaigns).filter(([,c])=>isPublishedToReaders(c)&&campMatchMkt(c,rMarket));
