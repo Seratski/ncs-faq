@@ -648,12 +648,15 @@ function saveModalTransInput() {
   if (q || a) modalTranslations[modalLang] = {q, a};
 }
 
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
 async function translateText(text, targetLang) {
-  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${targetLang}`;
+  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${targetLang}&de=ncs@power.dk`;
   const res = await fetch(url);
+  if (!res.ok) throw new Error("HTTP " + res.status);
   const d = await res.json();
-  if (d.responseStatus === 200) return d.responseData.translatedText;
-  throw new Error("Translation failed");
+  if (String(d.responseStatus) === "200") return d.responseData.translatedText;
+  throw new Error(d.responseDetails || "Translation failed");
 }
 
 async function translateModal() {
@@ -664,15 +667,19 @@ async function translateModal() {
   const spin = document.getElementById("m-spinner");
   btn.disabled = true; spin.classList.add("show");
   try {
-    const targets = [{l:"da",code:"da"},{l:"sv",code:"sv"},{l:"fi",code:"fi"},{l:"no",code:"no"}];
+    const targets = [{l:"da",code:"da"},{l:"sv",code:"sv"},{l:"fi",code:"fi"},{l:"no",code:"nb"}];
     for (const {l, code} of targets) {
       const tq = await translateText(q, code);
+      await sleep(400);
       const ta = await translateText(a, code);
+      await sleep(400);
       modalTranslations[l] = {q: tq, a: ta};
     }
     renderModalLangTab();
     showToast("Translated successfully");
-  } catch(e) { alert("Translation failed — please try again."); }
+  } catch(e) {
+    alert("Translation failed: " + e.message + "\n\nYou can add translations manually per language tab.");
+  }
   finally { btn.disabled = false; spin.classList.remove("show"); }
 }
 
