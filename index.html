@@ -670,9 +670,9 @@ async function translateModal() {
     const targets = [{l:"da",code:"da"},{l:"sv",code:"sv"},{l:"fi",code:"fi"},{l:"no",code:"nb"}];
     for (const {l, code} of targets) {
       const tq = await translateText(q, code);
-      await sleep(200);
+      await sleep(100);
       const ta = await translateText(a, code);
-      await sleep(200);
+      await sleep(100);
       modalTranslations[l] = {q: tq, a: ta};
     }
     renderModalLangTab();
