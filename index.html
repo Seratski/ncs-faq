@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NCS — Customer Service FAQ</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #f7f6f3;
+  --surface: #ffffff;
+  --surface2: #f2f1ee;
+  --border: rgba(0,0,0,0.08);
+  --border-strong: rgba(0,0,0,0.14);
+  --text: #1a1916;
+  --muted: #6b6a67;
+  --hint: #a09e9b;
+  --accent: #1a1916;
+  --new-bg: #e8f5e3;
+  --new-text: #2d7a1f;
+  --draft-bg: #fef3e2;
+  --draft-text: #a05c00;
+  --danger-bg: #fde8e8;
+  --danger-text: #b91c1c;
+  --info-bg: #e8f0fe;
+  --info-text: #1a56db;
+  --success-bg: #e8f5e3;
+  --success-text: #2d7a1f;
+  --warn-bg: #fef3e2;
+  --warn-text: #a05c00;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+  --trans: all 0.15s ease;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+a { color: inherit; text-decoration: none; }
+
+/* LAYOUT */
+.page { display: none; }
+.page.active { display: block; }
+
+/* TOPBAR */
+.topbar { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+.topbar-inner { max-width: 860px; margin: 0 auto; padding: 0 20px; height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.logo { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+.logo span { color: var(--muted); font-weight: 400; }
+.topbar-right { display: flex; align-items: center; gap: 8px; }
+.lang-switcher { display: flex; border: 1px solid var(--border-strong); border-radius: 8px; overflow: hidden; }
+.lang-btn { padding: 5px 10px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; background: none; border: none; cursor: pointer; color: var(--muted); transition: var(--trans); border-right: 1px solid var(--border); }
+.lang-btn:last-child { border-right: none; }
+.lang-btn.active { background: var(--accent); color: #fff; }
+.admin-link { font-size: 12px; color: var(--hint); cursor: pointer; padding: 4px 8px; border-radius: var(--radius-sm); transition: var(--trans); }
+.admin-link:hover { color: var(--muted); background: var(--surface2); }
+
+/* MAIN */
+.main { max-width: 860px; margin: 0 auto; padding: 32px 20px 80px; }
+
+/* HERO */
+.hero { margin-bottom: 32px; }
+.hero h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 6px; }
+.hero p { font-size: 15px; color: var(--muted); }
+
+/* SEARCH */
+.search-wrap { position: relative; margin-bottom: 20px; }
+.search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--hint); font-size: 15px; pointer-events: none; }
+.search-input { width: 100%; padding: 11px 14px 11px 40px; font-family: 'DM Sans', sans-serif; font-size: 14px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius); color: var(--text); outline: none; transition: var(--trans); box-shadow: var(--shadow); }
+.search-input:focus { border-color: var(--accent); }
+.search-input::placeholder { color: var(--hint); }
+
+/* CATEGORY BAR */
+.cat-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 24px; }
+.cat-pill { padding: 6px 14px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; border: 1px solid var(--border-strong); border-radius: 20px; background: var(--surface); cursor: pointer; color: var(--muted); transition: var(--trans); white-space: nowrap; }
+.cat-pill:hover { border-color: var(--accent); color: var(--text); }
+.cat-pill.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* FAQ LIST */
+.faq-count { font-size: 12px; color: var(--hint); margin-bottom: 12px; }
+.faq-list { display: flex; flex-direction: column; gap: 8px; }
+.faq-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: border-color 0.15s; }
+.faq-card:hover { border-color: var(--border-strong); }
+.faq-q { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 20px; cursor: pointer; user-select: none; }
+.faq-q-left { display: flex; align-items: flex-start; gap: 10px; flex: 1; min-width: 0; }
+.faq-q-text { font-size: 14px; font-weight: 500; line-height: 1.5; }
+.faq-chevron { color: var(--hint); font-size: 11px; flex-shrink: 0; margin-top: 4px; transition: transform 0.2s; }
+.faq-card.open .faq-chevron { transform: rotate(180deg); }
+.faq-a { display: none; padding: 0 20px 18px; font-size: 14px; color: var(--muted); line-height: 1.75; border-top: 1px solid var(--border); white-space: pre-wrap; word-break: break-word; }
+.faq-card.open .faq-a { display: block; padding-top: 16px; }
+.badge-new { font-size: 10px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; background: var(--new-bg); color: var(--new-text); flex-shrink: 0; margin-top: 2px; }
+.fallback-note { font-size: 11px; color: var(--warn-text); background: var(--warn-bg); padding: 2px 8px; border-radius: 4px; display: inline-block; margin-top: 6px; }
+.empty-state { text-align: center; padding: 60px 20px; color: var(--hint); font-size: 14px; }
+
+/* PIN GATE */
+.pin-gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); }
+.pin-box { background: var(--surface); border: 1px solid var(--border-strong); border-radius: 16px; padding: 40px 36px; width: 100%; max-width: 360px; box-shadow: var(--shadow); text-align: center; }
+.pin-box h2 { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+.pin-box p { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+.pin-input { width: 100%; padding: 12px 14px; font-family: 'DM Mono', monospace; font-size: 22px; letter-spacing: 0.2em; text-align: center; border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--surface2); color: var(--text); outline: none; margin-bottom: 12px; transition: var(--trans); }
+.pin-input:focus { border-color: var(--accent); background: #fff; }
+.pin-error { font-size: 12px; color: var(--danger-text); margin-bottom: 8px; min-height: 18px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); cursor: pointer; transition: var(--trans); white-space: nowrap; }
+.btn:hover { background: var(--surface2); }
+.btn:active { transform: scale(0.98); }
+.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn-primary:hover { opacity: 0.88; background: var(--accent); }
+.btn-danger { background: var(--danger-bg); color: var(--danger-text); border-color: transparent; }
+.btn-danger:hover { opacity: 0.85; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-translate { background: var(--info-bg); color: var(--info-text); border-color: transparent; }
+.btn-translate:hover { opacity: 0.85; }
+.btn-translate:disabled { opacity: 0.4; cursor: default; transform: none; }
+.btn-full { width: 100%; justify-content: center; }
+
+/* ADMIN */
+.admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+.admin-header h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+.admin-tabs { display: flex; border-bottom: 1px solid var(--border-strong); margin-bottom: 24px; gap: 0; }
+.admin-tab { padding: 10px 18px; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: var(--trans); }
+.admin-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+.admin-panel { display: none; }
+.admin-panel.active { display: block; }
+
+.section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow); }
+.section-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--hint); margin-bottom: 14px; }
+
+.field { margin-bottom: 10px; }
+.field label { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 5px; }
+.field input, .field select, .field textarea { width: 100%; padding: 9px 12px; font-family: 'DM Sans', sans-serif; font-size: 13px; background: var(--surface2); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); color: var(--text); outline: none; transition: var(--trans); }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); background: #fff; }
+.field textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+.field-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.field-row .field { flex: 1; min-width: 160px; }
+
+.lang-tabs { display: flex; gap: 0; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); overflow: hidden; width: fit-content; margin-bottom: 12px; }
+.ltab { padding: 5px 14px; font-size: 12px; font-weight: 500; background: none; border: none; cursor: pointer; color: var(--muted); border-right: 1px solid var(--border); font-family: 'DM Sans', sans-serif; transition: var(--trans); }
+.ltab:last-child { border-right: none; }
+.ltab.active { background: var(--accent); color: #fff; }
+.ltab.has { color: var(--success-text); }
+.ltab.active.has { color: #fff; }
+
+/* FAQ EDITOR LIST */
+.faq-ed-list { display: flex; flex-direction: column; gap: 8px; }
+.faq-ed-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+.faq-ed-hdr { display: flex; align-items: center; gap: 10px; padding: 14px 16px; cursor: pointer; transition: background 0.1s; }
+.faq-ed-hdr:hover { background: var(--surface2); }
+.faq-ed-q { flex: 1; font-size: 13px; font-weight: 500; line-height: 1.4; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.faq-ed-meta { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.status-badge { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 7px; border-radius: 4px; }
+.status-published { background: var(--success-bg); color: var(--success-text); }
+.status-draft { background: var(--draft-bg); color: var(--draft-text); }
+.trans-badge { font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 4px; background: var(--surface2); color: var(--muted); }
+.trans-full { background: var(--success-bg); color: var(--success-text); }
+.trans-partial { background: var(--warn-bg); color: var(--warn-text); }
+.faq-ed-body { display: none; padding: 16px; border-top: 1px solid var(--border); background: #fafaf9; }
+.faq-ed-item.open .faq-ed-body { display: block; }
+.ed-footer { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+.spinner { font-size: 12px; color: var(--muted); display: none; }
+.spinner.show { display: inline; }
+
+/* CAT ADMIN */
+.cat-admin-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.cat-admin-item { display: flex; align-items: center; gap: 6px; padding: 5px 12px; background: var(--surface2); border: 1px solid var(--border-strong); border-radius: 20px; font-size: 13px; }
+.cat-admin-item button { background: none; border: none; cursor: pointer; color: var(--hint); font-size: 11px; padding: 0 2px; line-height: 1; }
+.cat-admin-item button:hover { color: var(--danger-text); }
+
+.save-toast { position: fixed; bottom: 24px; right: 24px; background: var(--accent); color: #fff; padding: 10px 18px; border-radius: var(--radius); font-size: 13px; font-weight: 500; opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 999; }
+.save-toast.show { opacity: 1; }
+
+.setup-note { background: var(--info-bg); border: 1px solid rgba(26,86,219,0.15); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 20px; font-size: 13px; color: var(--info-text); line-height: 1.6; }
+.setup-note strong { font-weight: 600; }
+.setup-note code { font-family: 'DM Mono', monospace; font-size: 12px; background: rgba(26,86,219,0.1); padding: 1px 5px; border-radius: 3px; }
+
+@media (max-width: 600px) {
+  .topbar-inner { padding: 0 14px; }
+  .main { padding: 24px 14px 60px; }
+  .hero h1 { font-size: 22px; }
+  .pin-box { padding: 28px 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================ READER PAGE -->
+<div id="page-reader" class="page active">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="logo">NCS <span>FAQ</span></div>
+      <div class="topbar-right">
+        <div class="lang-switcher" id="lang-switcher">
+          <button class="lang-btn active" onclick="setLang('en',this)">EN</button>
+          <button class="lang-btn" onclick="setLang('da',this)">DA</button>
+          <button class="lang-btn" onclick="setLang('sv',this)">SE</button>
+          <button class="lang-btn" onclick="setLang('fi',this)">FI</button>
+          <button class="lang-btn" onclick="setLang('no',this)">NO</button>
+        </div>
+        <span class="admin-link" onclick="showPinGate()">Admin</span>
+      </div>
+    </div>
+  </div>
+  <div class="main">
+    <div class="hero">
+      <h1 id="reader-title">Customer Service FAQ</h1>
+      <p id="reader-subtitle">Find answers to common questions below.</p>
+    </div>
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input class="search-input" id="reader-search" placeholder="Search questions..." oninput="renderReader()"/>
+    </div>
+    <div class="cat-bar" id="reader-cats"></div>
+    <div class="faq-count" id="reader-count"></div>
+    <div class="faq-list" id="reader-list"></div>
+  </div>
+</div>
+
+<!-- ============================================================ PIN GATE -->
+<div id="page-pin" class="page">
+  <div class="pin-gate">
+    <div class="pin-box">
+      <h2>Admin access</h2>
+      <p>Enter your PIN to manage the FAQ.</p>
+      <input class="pin-input" id="pin-input" type="password" maxlength="8" placeholder="••••" onkeydown="if(event.key==='Enter')checkPin()"/>
+      <div class="pin-error" id="pin-error"></div>
+      <button class="btn btn-primary btn-full" onclick="checkPin()">Continue</button>
+      <br/><br/>
+      <span class="admin-link" onclick="showPage('page-reader')">← Back to FAQ</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ ADMIN PAGE -->
+<div id="page-admin" class="page">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="logo">NCS <span>FAQ — Admin</span></div>
+      <div class="topbar-right">
+        <button class="btn btn-sm" onclick="showPage('page-reader')">← View FAQ</button>
+        <button class="btn btn-sm" onclick="logout()">Sign out</button>
+      </div>
+    </div>
+  </div>
+  <div class="main">
+    <div id="firebase-setup-note" class="setup-note" style="display:none">
+      <strong>⚙️ Firebase not configured yet.</strong> Open this file in a text editor and replace the placeholder values in the <code>firebaseConfig</code> block near the bottom with your Firebase project credentials. See the README for step-by-step instructions.
+    </div>
+    <div class="admin-header">
+      <h1>Manage FAQ</h1>
+      <button class="btn btn-primary" onclick="openAddModal()">+ Add question</button>
+    </div>
+    <div class="admin-tabs">
+      <div class="admin-tab active" onclick="setAdminTab('questions',this)">Questions</div>
+      <div class="admin-tab" onclick="setAdminTab('categories',this)">Categories</div>
+      <div class="admin-tab" onclick="setAdminTab('settings',this)">Settings</div>
+    </div>
+
+    <!-- Questions panel -->
+    <div class="admin-panel active" id="panel-questions">
+      <div id="admin-faq-list" class="faq-ed-list"></div>
+    </div>
+
+    <!-- Categories panel -->
+    <div class="admin-panel" id="panel-categories">
+      <div class="section">
+        <div class="section-title">Manage categories</div>
+        <div class="cat-admin-list" id="cat-admin-list"></div>
+        <div class="field-row">
+          <div class="field" style="flex:1"><input id="new-cat-input" placeholder="New category name (English)..." onkeydown="if(event.key==='Enter')addCat()"/></div>
+          <div><button class="btn" onclick="addCat()" style="margin-top:0;height:38px;margin-top:20px">+ Add</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings panel -->
+    <div class="admin-panel" id="panel-settings">
+      <div class="section">
+        <div class="section-title">Change admin PIN</div>
+        <div class="field-row">
+          <div class="field"><label>Current PIN</label><input type="password" id="pin-current" placeholder="Current PIN"/></div>
+          <div class="field"><label>New PIN</label><input type="password" id="pin-new" placeholder="New PIN (4-8 digits)"/></div>
+          <div class="field"><label>Confirm new PIN</label><input type="password" id="pin-confirm" placeholder="Repeat new PIN"/></div>
+        </div>
+        <div id="pin-change-msg" style="font-size:12px;margin-top:8px;min-height:18px"></div>
+        <button class="btn btn-primary" style="margin-top:8px" onclick="changePin()">Update PIN</button>
+      </div>
+      <div class="section">
+        <div class="section-title">About</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.6">NCS FAQ — built for Nordic Customer Service.<br/>Questions marked <strong>NEW</strong> were published within the last 14 days.<br/>Unpublished questions are saved as drafts and are not visible to readers.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ ADD / EDIT MODAL -->
+<div id="modal-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:200;overflow-y:auto;padding:40px 20px;" onclick="handleBackdropClick(event)">
+  <div style="background:var(--surface);border-radius:16px;max-width:640px;margin:0 auto;padding:28px;box-shadow:0 8px 32px rgba(0,0,0,0.15);" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <h2 style="font-size:17px;font-weight:600" id="modal-title">Add question</h2>
+      <button class="btn btn-sm" onclick="closeModal()">✕ Close</button>
+    </div>
+
+    <div class="field-row">
+      <div class="field" style="flex:2"><label>Category</label>
+        <select id="m-cat"></select>
+      </div>
+      <div class="field" style="flex:1"><label>Status</label>
+        <select id="m-status">
+          <option value="published">Published</option>
+          <option value="draft">Draft</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px">
+      <div class="section-title" style="margin-bottom:10px">English (source)</div>
+      <div class="field"><label>Question</label><input id="m-en-q" placeholder="Question in English..."/></div>
+      <div class="field"><label>Answer</label><textarea id="m-en-a" placeholder="Answer in English..." style="min-height:100px"></textarea></div>
+      <button class="btn btn-translate btn-sm" id="m-translate-btn" onclick="translateModal()">Auto-translate to DA / SE / FI / NO</button>
+      <span class="spinner" id="m-spinner">Translating...</span>
+    </div>
+
+    <div style="margin-bottom:16px">
+      <div class="section-title" style="margin-bottom:10px">Translations</div>
+      <div class="lang-tabs" id="m-lang-tabs">
+        <button class="ltab" data-l="da" onclick="setModalLangTab('da',this)">DA</button>
+        <button class="ltab" data-l="sv" onclick="setModalLangTab('sv',this)">SE</button>
+        <button class="ltab" data-l="fi" onclick="setModalLangTab('fi',this)">FI</button>
+        <button class="ltab active" data-l="no" onclick="setModalLangTab('no',this)">NO</button>
+      </div>
+      <div id="m-trans-fields">
+        <div class="field"><label id="m-trans-q-label">Question (Norwegian)</label><input id="m-trans-q" placeholder=""/></div>
+        <div class="field"><label id="m-trans-a-label">Answer (Norwegian)</label><textarea id="m-trans-a" placeholder="" style="min-height:80px"></textarea></div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+      <button class="btn btn-danger" id="modal-delete-btn" onclick="deleteCurrentItem()" style="display:none">Delete</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveModal()">Save question</button>
+    </div>
+  </div>
+</div>
+
+<div class="save-toast" id="save-toast">Saved</div>
+
+<script>
+// ================================================================
+// FIREBASE CONFIG — replace with your project values
+// Get these from Firebase Console → Project Settings → Your apps
+// ================================================================
+const firebaseConfig = {
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
+  databaseURL:       "https://YOUR_PROJECT_ID-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:         "YOUR_PROJECT_ID",
+  storageBucket:     "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId:             "YOUR_APP_ID"
+};
+// ================================================================
+
+const LANGS = ['en','da','sv','fi','no'];
+const LANG_NAMES = {en:'English',da:'Danish',sv:'Swedish',fi:'Finnish',no:'Norwegian'};
+const LANG_PLACEHOLDERS = {
+  en:{q:'Question...',a:'Answer...'},
+  da:{q:'Spørgsmål...',a:'Svar...'},
+  sv:{q:'Fråga...',a:'Svar...'},
+  fi:{q:'Kysymys...',a:'Vastaus...'},
+  no:{q:'Spørsmål...',a:'Svar...'}
+};
+const READER_STRINGS = {
+  en:{title:'Customer Service FAQ',subtitle:'Find answers to common questions below.',search:'Search questions...',all:'All categories',count:n=>`${n} question${n!==1?'s':''}`,notrans:'Showing English'},
+  da:{title:'Kundeservice FAQ',subtitle:'Find svar på dine spørgsmål herunder.',search:'Søg...',all:'Alle kategorier',count:n=>`${n} spørgsmål`,notrans:'Viser engelsk'},
+  sv:{title:'Kundservice FAQ',subtitle:'Hitta svar på vanliga frågor nedan.',search:'Sök...',all:'Alla kategorier',count:n=>`${n} frågor`,notrans:'Visar engelska'},
+  fi:{title:'Asiakaspalvelu FAQ',subtitle:'Löydä vastauksia yleisiin kysymyksiin.',search:'Hae...',all:'Kaikki kategoriat',count:n=>`${n} kysymystä`,notrans:'Näytetään englanniksi'},
+  no:{title:'Kundeservice FAQ',subtitle:'Finn svar på vanlige spørsmål nedenfor.',search:'Søk...',all:'Alle kategorier',count:n=>`${n} spørsmål`,notrans:'Viser engelsk'}
+};
+
+let db = null;
+let firebaseOk = false;
+let cache = { faqs: {}, cats: [], pin: '1234' };
+let readerLang = 'en';
+let readerCat = 'all';
+let readerOpen = new Set();
+let adminAuthenticated = false;
+let modalLang = 'no';
+let modalTranslations = {};
+let editingId = null;
+
+// Init Firebase
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+  if (!firebaseConfig.apiKey.includes('YOUR_')) {
+    firebaseOk = true;
+    listenToData();
+  }
+} catch(e) {}
+
+function listenToData() {
+  db.ref('/ncs-faq').on('value', snap => {
+    const val = snap.val() || {};
+    cache.faqs = val.faqs || {};
+    cache.cats = val.cats || ['General'];
+    cache.pin  = val.pin  || '1234';
+    renderReader();
+    renderAdminList();
+    renderCatAdmin();
+  });
+}
+
+// ======================== PAGE NAVIGATION
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function showPinGate() {
+  document.getElementById('pin-input').value = '';
+  document.getElementById('pin-error').textContent = '';
+  showPage('page-pin');
+  setTimeout(() => document.getElementById('pin-input').focus(), 100);
+}
+
+function checkPin() {
+  const entered = document.getElementById('pin-input').value.trim();
+  if (entered === cache.pin) {
+    adminAuthenticated = true;
+    document.getElementById('firebase-setup-note').style.display = firebaseOk ? 'none' : 'block';
+    renderAdminList();
+    renderCatAdmin();
+    showPage('page-admin');
+  } else {
+    document.getElementById('pin-error').textContent = 'Incorrect PIN — try again.';
+    document.getElementById('pin-input').value = '';
+  }
+}
+
+function logout() {
+  adminAuthenticated = false;
+  showPage('page-reader');
+}
+
+// ======================== READER
+function setLang(l, btn) {
+  readerLang = l;
+  document.querySelectorAll('#lang-switcher .lang-btn').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  const s = READER_STRINGS[l];
+  document.getElementById('reader-title').textContent = s.title;
+  document.getElementById('reader-subtitle').textContent = s.subtitle;
+  document.getElementById('reader-search').placeholder = s.search;
+  renderReader();
+}
+
+function renderReader() {
+  const s = READER_STRINGS[readerLang];
+  const search = (document.getElementById('reader-search')?.value || '').toLowerCase();
+  const published = Object.entries(cache.faqs)
+    .filter(([,f]) => f.status === 'published')
+    .sort(([,a],[,b]) => (b.publishedAt||0) - (a.publishedAt||0));
+
+  // Category bar
+  const catBar = document.getElementById('reader-cats');
+  const usedCats = [...new Set(published.map(([,f]) => f.cat).filter(Boolean))];
+  catBar.innerHTML = [
+    `<button class="cat-pill${readerCat==='all'?' active':''}" onclick="setReaderCat('all')">${s.all}</button>`,
+    ...cache.cats.filter(c => usedCats.includes(c)).map(c =>
+      `<button class="cat-pill${readerCat===c?' active':''}" onclick="setReaderCat('${escAttr(c)}')">${escHtml(c)}</button>`
+    )
+  ].join('');
+
+  const filtered = published.filter(([,f]) => {
+    if (readerCat !== 'all' && f.cat !== readerCat) return false;
+    const t = (f.translations && (f.translations[readerLang] || f.translations.en)) || {};
+    return !search || (t.q||'').toLowerCase().includes(search) || (t.a||'').toLowerCase().includes(search);
+  });
+
+  document.getElementById('reader-count').textContent = s.count(filtered.length);
+
+  const list = document.getElementById('reader-list');
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty-state">No questions found.</div>';
+    return;
+  }
+
+  const now = Date.now();
+  const NEW_MS = 14 * 24 * 60 * 60 * 1000;
+
+  list.innerHTML = filtered.map(([id, f]) => {
+    const hasT = f.translations && f.translations[readerLang] && f.translations[readerLang].q;
+    const t = hasT ? f.translations[readerLang] : (f.translations && f.translations.en) || {};
+    const isNew = f.publishedAt && (now - f.publishedAt) < NEW_MS;
+    const isOpen = readerOpen.has(id);
+    return `<div class="faq-card${isOpen?' open':''}" id="rc-${id}">
+      <div class="faq-q" onclick="toggleReader('${id}')">
+        <div class="faq-q-left">
+          ${isNew ? '<span class="badge-new">New</span>' : ''}
+          <span class="faq-q-text">${escHtml(t.q||'')}</span>
+        </div>
+        <span class="faq-chevron">▼</span>
+      </div>
+      <div class="faq-a">${escHtml(t.a||'')}${!hasT && readerLang!=='en' ? `\n<span class="fallback-note">${s.notrans}</span>` : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+function setReaderCat(c) { readerCat = c; renderReader(); }
+function toggleReader(id) {
+  readerOpen.has(id) ? readerOpen.delete(id) : readerOpen.add(id);
+  const el = document.getElementById('rc-'+id);
+  if(el) el.classList.toggle('open', readerOpen.has(id));
+}
+
+// ======================== ADMIN TABS
+function setAdminTab(tab, btn) {
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+}
+
+// ======================== ADMIN FAQ LIST
+function renderAdminList() {
+  const el = document.getElementById('admin-faq-list');
+  if (!el) return;
+  const faqs = Object.entries(cache.faqs).sort(([,a],[,b]) => (b.createdAt||0) - (a.createdAt||0));
+  if (!faqs.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:40px 0">No questions yet — add the first one above.</div>';
+    return;
+  }
+  el.innerHTML = faqs.map(([id, f]) => {
+    const enQ = (f.translations && f.translations.en && f.translations.en.q) || '(no English text)';
+    const tc = LANGS.filter(l => f.translations && f.translations[l] && f.translations[l].q).length;
+    const tClass = tc >= 5 ? 'trans-full' : tc > 1 ? 'trans-partial' : '';
+    return `<div class="faq-ed-item" id="aei-${id}">
+      <div class="faq-ed-hdr" onclick="openEditModal('${id}')">
+        <span class="faq-ed-q" title="${escAttr(enQ)}">${escHtml(enQ)}</span>
+        <span class="faq-ed-meta">
+          <span class="trans-badge ${tClass}">${tc}/5</span>
+          <span class="status-badge status-${f.status||'draft'}">${f.status||'draft'}</span>
+        </span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ======================== CATEGORIES ADMIN
+function renderCatAdmin() {
+  const el = document.getElementById('cat-admin-list');
+  if (!el) return;
+  el.innerHTML = cache.cats.map((c,i) =>
+    `<div class="cat-admin-item">${escHtml(c)}<button onclick="removeCat(${i})" title="Delete">✕</button></div>`
+  ).join('');
+}
+
+async function addCat() {
+  const inp = document.getElementById('new-cat-input');
+  const v = inp.value.trim();
+  if (!v || cache.cats.includes(v)) return;
+  const newCats = [...cache.cats, v];
+  await setFirebase('/ncs-faq/cats', newCats);
+  inp.value = '';
+}
+
+async function removeCat(i) {
+  const cat = cache.cats[i];
+  const used = Object.values(cache.faqs).filter(f => f.cat === cat).length;
+  if (used && !confirm(`"${cat}" is used by ${used} question${used>1?'s':''}. Delete anyway?`)) return;
+  const newCats = [...cache.cats];
+  newCats.splice(i,1);
+  if (!newCats.length) newCats.push('General');
+  await setFirebase('/ncs-faq/cats', newCats);
+}
+
+// ======================== MODAL — ADD/EDIT
+function openAddModal() {
+  editingId = null;
+  modalTranslations = {};
+  modalLang = 'da';
+  document.getElementById('modal-title').textContent = 'Add question';
+  document.getElementById('modal-delete-btn').style.display = 'none';
+  document.getElementById('m-en-q').value = '';
+  document.getElementById('m-en-a').value = '';
+  document.getElementById('m-status').value = 'published';
+  document.getElementById('m-cat').innerHTML = cache.cats.map(c => `<option value="${escAttr(c)}">${escHtml(c)}</option>`).join('');
+  renderModalLangTab();
+  document.getElementById('modal-backdrop').style.display = 'block';
+  document.getElementById('m-en-q').focus();
+}
+
+function openEditModal(id) {
+  const f = cache.faqs[id];
+  if (!f) return;
+  editingId = id;
+  modalTranslations = JSON.parse(JSON.stringify(f.translations || {}));
+  modalLang = 'da';
+  document.getElementById('modal-title').textContent = 'Edit question';
+  document.getElementById('modal-delete-btn').style.display = 'inline-flex';
+  document.getElementById('m-en-q').value = (f.translations && f.translations.en && f.translations.en.q) || '';
+  document.getElementById('m-en-a').value = (f.translations && f.translations.en && f.translations.en.a) || '';
+  document.getElementById('m-status').value = f.status || 'draft';
+  document.getElementById('m-cat').innerHTML = cache.cats.map(c => `<option value="${escAttr(c)}"${f.cat===c?' selected':''}>${escHtml(c)}</option>`).join('');
+  renderModalLangTab();
+  document.getElementById('modal-backdrop').style.display = 'block';
+}
+
+function closeModal() {
+  saveModalTransInput();
+  document.getElementById('modal-backdrop').style.display = 'none';
+  editingId = null;
+}
+
+function handleBackdropClick(e) {
+  if (e.target === document.getElementById('modal-backdrop')) closeModal();
+}
+
+function setModalLangTab(l, btn) {
+  saveModalTransInput();
+  modalLang = l;
+  renderModalLangTab();
+}
+
+function renderModalLangTab() {
+  const ph = LANG_PLACEHOLDERS[modalLang] || LANG_PLACEHOLDERS.en;
+  const t = modalTranslations[modalLang] || {};
+  document.querySelectorAll('#m-lang-tabs .ltab').forEach(b => {
+    b.classList.remove('active');
+    const l = b.dataset.l;
+    const has = modalTranslations[l] && modalTranslations[l].q;
+    b.classList.toggle('has', !!has);
+    if (l === modalLang) b.classList.add('active');
+  });
+  document.getElementById('m-trans-q-label').textContent = `Question (${LANG_NAMES[modalLang]})`;
+  document.getElementById('m-trans-a-label').textContent = `Answer (${LANG_NAMES[modalLang]})`;
+  document.getElementById('m-trans-q').placeholder = ph.q;
+  document.getElementById('m-trans-a').placeholder = ph.a;
+  document.getElementById('m-trans-q').value = t.q || '';
+  document.getElementById('m-trans-a').value = t.a || '';
+}
+
+function saveModalTransInput() {
+  const q = document.getElementById('m-trans-q').value.trim();
+  const a = document.getElementById('m-trans-a').value.trim();
+  if (q || a) modalTranslations[modalLang] = {q, a};
+}
+
+async function translateModal() {
+  const q = document.getElementById('m-en-q').value.trim();
+  const a = document.getElementById('m-en-a').value.trim();
+  if (!q || !a) { alert('Add English question and answer first.'); return; }
+  const btn = document.getElementById('m-translate-btn');
+  const spin = document.getElementById('m-spinner');
+  btn.disabled = true; spin.classList.add('show');
+  const prompt = `Translate this FAQ question and answer from English into Danish (da), Swedish (sv), Finnish (fi), and Norwegian (no). Return ONLY valid JSON, no markdown:
+{"da":{"q":"...","a":"..."},"sv":{"q":"...","a":"..."},"fi":{"q":"...","a":"..."},"no":{"q":"...","a":"..."}}
+English question: ${q}
+English answer: ${a}`;
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({model:'claude-sonnet-4-20250514', max_tokens:1500, messages:[{role:'user',content:prompt}]})
+    });
+    const d = await res.json();
+    const text = d.content.map(x=>x.text||'').join('').replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(text);
+    ['da','sv','fi','no'].forEach(l => { if (parsed[l]&&parsed[l].q) modalTranslations[l] = parsed[l]; });
+    renderModalLangTab();
+    showToast('Translated successfully');
+  } catch(e) { alert('Translation failed — please try again.'); }
+  finally { btn.disabled = false; spin.classList.remove('show'); }
+}
+
+async function saveModal() {
+  saveModalTransInput();
+  const enQ = document.getElementById('m-en-q').value.trim();
+  const enA = document.getElementById('m-en-a').value.trim();
+  if (!enQ || !enA) { alert('English question and answer are required.'); return; }
+  const cat = document.getElementById('m-cat').value;
+  const status = document.getElementById('m-status').value;
+  modalTranslations['en'] = {q: enQ, a: enA};
+  const now = Date.now();
+  const payload = {
+    cat, status,
+    translations: modalTranslations,
+    updatedAt: now
+  };
+  if (!editingId) {
+    payload.createdAt = now;
+    if (status === 'published') payload.publishedAt = now;
+    await pushFirebase('/ncs-faq/faqs', payload);
+  } else {
+    const prev = cache.faqs[editingId] || {};
+    if (status === 'published' && prev.status !== 'published') payload.publishedAt = now;
+    else if (prev.publishedAt) payload.publishedAt = prev.publishedAt;
+    payload.createdAt = prev.createdAt || now;
+    await setFirebase(`/ncs-faq/faqs/${editingId}`, payload);
+  }
+  closeModal();
+  showToast('Saved');
+}
+
+async function deleteCurrentItem() {
+  if (!editingId) return;
+  if (!confirm('Delete this question permanently?')) return;
+  await db.ref(`/ncs-faq/faqs/${editingId}`).remove();
+  closeModal();
+  showToast('Deleted');
+}
+
+// ======================== PIN CHANGE
+async function changePin() {
+  const cur = document.getElementById('pin-current').value;
+  const nw = document.getElementById('pin-new').value.trim();
+  const cf = document.getElementById('pin-confirm').value.trim();
+  const msg = document.getElementById('pin-change-msg');
+  if (cur !== cache.pin) { msg.textContent = 'Current PIN is incorrect.'; msg.style.color='var(--danger-text)'; return; }
+  if (nw.length < 4) { msg.textContent = 'New PIN must be at least 4 characters.'; msg.style.color='var(--danger-text)'; return; }
+  if (nw !== cf) { msg.textContent = 'PINs do not match.'; msg.style.color='var(--danger-text)'; return; }
+  await setFirebase('/ncs-faq/pin', nw);
+  msg.textContent = 'PIN updated successfully.'; msg.style.color='var(--success-text)';
+  document.getElementById('pin-current').value=''; document.getElementById('pin-new').value=''; document.getElementById('pin-confirm').value='';
+}
+
+// ======================== FIREBASE HELPERS
+async function setFirebase(path, value) {
+  if (!firebaseOk) { console.warn('Firebase not configured'); return; }
+  try { await db.ref(path).set(value); } catch(e) { alert('Save failed: ' + e.message); }
+}
+async function pushFirebase(path, value) {
+  if (!firebaseOk) { console.warn('Firebase not configured'); return; }
+  try { await db.ref(path).push(value); } catch(e) { alert('Save failed: ' + e.message); }
+}
+
+// ======================== UTILS
+function showToast(msg) {
+  const t = document.getElementById('save-toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escAttr(s) { return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+// Init
+if (!firebaseOk) {
+  cache.cats = ['General','Returns','Orders','Price match','Campaigns'];
+  renderReader();
+}
+</script>
+</body>
+</html>
