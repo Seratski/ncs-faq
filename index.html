@@ -383,6 +383,12 @@ async function fbS(p,v){if(fbok)await db.ref(p).set(v);}
 async function fbP(p,v){if(fbok){const r=await db.ref(p).push(v);return r.key;}return 'k'+Date.now();}
 async function fbD(p){if(fbok)await db.ref(p).remove();}
 
+function parseLocalDate(d){
+  // Parse YYYY-MM-DD as LOCAL midnight, not UTC midnight
+  if(!d)return null;
+  const[y,m,day]=d.split('-').map(Number);
+  return new Date(y,m-1,day);
+}
 function mktDates(c,mkt){
   // New format: markets object; fallback to old flat format
   if(c.markets&&c.markets[mkt]) return c.markets[mkt];
@@ -398,7 +404,8 @@ function mktStatus(c,mkt){
   if(c.status==='draft')return'draft';
   const now=new Date();now.setHours(0,0,0,0);
   const d=mktDates(c,mkt);
-  const s=d.startDate?new Date(d.startDate):null,e=d.endDate?new Date(d.endDate):null;
+  const s=d.startDate?parseLocalDate(d.startDate):null;
+  const e=d.endDate?parseLocalDate(d.endDate):null;
   if(!s&&!e)return'active';
   if(s&&s>now)return'upcoming';
   if(e&&e<now)return'ended';
@@ -470,7 +477,7 @@ function faqMatchMkt(f,selM){if(selM==='ALL')return true;const fc=f.countries||[
 function progress(c,mkt){
   const d=mkt&&mkt!=='ALL'?mktDates(c,mkt):(c.startDate?{startDate:c.startDate,endDate:c.endDate}:null);
   if(!d||!d.startDate||!d.endDate)return null;
-  const now=Date.now(),s=new Date(d.startDate).getTime(),e=new Date(d.endDate).getTime();
+  const now=Date.now(),s=parseLocalDate(d.startDate).getTime(),e=parseLocalDate(d.endDate).getTime();
   if(now<s)return 0;if(now>e)return 100;return Math.round((now-s)/(e-s)*100);
 }
 
