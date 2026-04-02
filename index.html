@@ -41,7 +41,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .cc:hover{border-color:#f96700;transform:translateY(-1px);box-shadow:0 4px 12px rgba(249,103,0,0.12)}
 .cc.inactive{opacity:0.6}
 .cca{position:absolute;top:0;left:0;right:0;height:3px;background:#f96700}
-.cca.upcoming{background:#ffe100}.cca.ended{background:#aaa}
+.cca.upcoming{background:#ffe100}.cca.ended{background:#aaa}.cca.scheduled{background:#1a56db}
 .cn{font-size:15px;font-weight:600;margin-bottom:8px;padding-right:68px;line-height:1.3}
 .ctags{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
 .ctag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;background:var(--s2);color:var(--mu);border:1px solid var(--bd)}
@@ -51,6 +51,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .sb{position:absolute;top:14px;right:14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:3px 8px;border-radius:4px}
 .sb.active{background:#f96700;color:#fff}.sb.upcoming{background:#ffe100;color:#7a6000}
 .sb.ended{background:#e8e8e8;color:#666}.sb.draft{background:#f0f0f0;color:#888}
+.sb.scheduled{background:#e8f0fe;color:#1a56db}
 .pbar{height:4px;border-radius:2px;background:var(--s2);margin-top:10px;overflow:hidden;position:relative}
 .pfill{height:100%;border-radius:2px;background:#f96700;position:absolute;top:0}
 .pfill.upcoming{background:#ffe100}.pfill.ended{background:#ccc}
@@ -276,7 +277,18 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
       <div style="border:1px solid var(--bd);border-radius:var(--r);padding:4px 14px 0;margin-top:6px;background:var(--s)" id="cm-markets"></div>
       <div class="fhint" style="margin-top:8px">Check a market to include it. Dates are optional — leave empty for no time limit.</div>
     </div>
-    <div class="fld"><label>Status</label><select id="cm-st"><option value="published">Published</option><option value="draft">Draft</option></select></div>
+    <div class="fld"><label>Visibility</label>
+      <select id="cm-st" onchange="toggleScheduledField()">
+        <option value="published">Published — visible immediately</option>
+        <option value="scheduled">Scheduled — goes live at a set date &amp; time</option>
+        <option value="draft">Draft — only visible to admins</option>
+      </select>
+    </div>
+    <div class="fld" id="cm-publish-at-wrap" style="display:none">
+      <label>Publish date &amp; time</label>
+      <input type="datetime-local" id="cm-publishAt"/>
+      <div class="fhint">Readers will see this campaign automatically from this moment.</div>
+    </div>
     <div class="mftr">
       <button class="btn btn-d" id="cm-del" onclick="deleteCampaign()" style="display:none">Delete campaign</button>
       <button class="btn" onclick="closeCmpModal()">Cancel</button>
@@ -392,21 +404,67 @@ function mktStatus(c,mkt){
   if(e&&e<now)return'ended';
   return'active';
 }
-function campStatus(c,selMkt){
-  if(c.status==='draft')return'draft';
+function isPublishedToReaders(c){
+  // Returns true if campaign should be visible to readers right now
+  if(c.status==='draft')return false;
+  if(c.status==='scheduled'){
+    if(!c.publishAt)return false;
+    return Date.now()>=new Date(c.publishAt).getTime();
+  }
+  return true; // published
+}
+function campPeriodStatus(c,selMkt){
+  // Period-based status: upcoming/active/ended based on market dates
   const mkts=mktList(c);
   if(!mkts.length)return'active';
-  // If specific market selected, return that market's status
   if(selMkt&&selMkt!=='ALL'&&mkts.includes(selMkt))return mktStatus(c,selMkt);
-  // Otherwise: active if ANY market active, else upcoming if any upcoming, else ended
   const statuses=mkts.map(m=>mktStatus(c,m));
   if(statuses.includes('active'))return'active';
   if(statuses.includes('upcoming'))return'upcoming';
   if(statuses.every(s=>s==='ended'))return'ended';
   return'active';
 }
-function fmtDate(d){if(!d)return'';return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}
-function fmtRange(d){if(!d)return'No date set';if(!d.startDate&&!d.endDate)return'No date set';if(d.startDate&&d.endDate)return fmtDate(d.startDate)+' → '+fmtDate(d.endDate);if(d.startDate)return 'From '+fmtDate(d.startDate);return'Until '+fmtDate(d.endDate);}
+function campStatus(c,selMkt){
+  // For reader cards: combines visibility + period
+  if(c.status==='draft')return'draft';
+  if(c.status==='scheduled'&&!isPublishedToReaders(c))return'scheduled';
+  return campPeriodStatus(c,selMkt);
+}
+function fmtDate(d){
+  if(!d)return'';
+  const dt=new Date(d);
+  const dd=String(dt.getDate()).padStart(2,'0');
+  const mm=String(dt.getMonth()+1).padStart(2,'0');
+  const yyyy=dt.getFullYear();
+  return dd+'/'+mm+'/'+yyyy;
+}
+function fmtDateTime(d){
+  if(!d)return'';
+  const dt=new Date(d);
+  const dd=String(dt.getDate()).padStart(2,'0');
+  const mm=String(dt.getMonth()+1).padStart(2,'0');
+  const yyyy=dt.getFullYear();
+  const hh=String(dt.getHours()).padStart(2,'0');
+  const min=String(dt.getMinutes()).padStart(2,'0');
+  return dd+'/'+mm+'/'+yyyy+' '+hh+':'+min;
+}
+function fmtRange(d){
+  if(!d)return'No date set';
+  if(!d.startDate&&!d.endDate)return'No date set';
+  if(d.startDate&&d.endDate)return fmtDate(d.startDate)+' → '+fmtDate(d.endDate);
+  if(d.startDate)return'From '+fmtDate(d.startDate);
+  return'Until '+fmtDate(d.endDate);
+}
+function fmtCountdown(dt){
+  const diff=new Date(dt).getTime()-Date.now();
+  if(diff<=0)return'Now';
+  const d=Math.floor(diff/86400000);
+  const h=Math.floor((diff%86400000)/3600000);
+  const m=Math.floor((diff%3600000)/60000);
+  if(d>0)return'in '+d+'d '+h+'h';
+  if(h>0)return'in '+h+'h '+m+'m';
+  return'in '+m+'m';
+}
 function campMatchMkt(c,m){if(m==='ALL')return true;return mktList(c).includes(m)||(!mktList(c).length);}
 function faqMatchMkt(f,selM){if(selM==='ALL')return true;const fc=f.countries||[];if(!fc.length)return true;return fc.includes(selM);}
 function progress(c,mkt){
@@ -423,7 +481,7 @@ function toggleSA(chk){rShowAll=chk.checked;renderR();}
 function renderR(){const el=document.getElementById('rcontent');if(!el)return;rView==='list'?renderList(el):renderFaqs(el);}
 
 function renderList(el){
-  const all=Object.entries(D.campaigns).filter(([,c])=>c.status!=='draft'&&campMatchMkt(c,rMarket));
+  const all=Object.entries(D.campaigns).filter(([,c])=>isPublishedToReaders(c)&&campMatchMkt(c,rMarket));
   const active=all.filter(([,c])=>campStatus(c)==='active');
   const others=all.filter(([,c])=>campStatus(c)!=='active');
   const show=rShowAll?[...active,...others]:active;
@@ -432,10 +490,10 @@ function renderList(el){
     h+=`<div class="nc">No active campaigns${rMarket!=='ALL'?' for '+rMarket:''}.<br/><a style="color:#f96700;cursor:pointer" onclick="forceShowAll()">Show all campaigns</a></div>`;
   }else{
     h+='<div class="cgrid">';
-    show.sort(([,a],[,b])=>{const o={active:0,upcoming:1,ended:2};return(o[campStatus(a)]||0)-(o[campStatus(b)]||0);});
+    show.sort(([,a],[,b])=>{const o={active:0,upcoming:1,ended:2};return(o[campPeriodStatus(a,rMarket)]||0)-(o[campPeriodStatus(b,rMarket)]||0);});
     show.forEach(([id,c])=>{
       const mkts=mktList(c);
-      const st=campStatus(c,rMarket);
+      const st=campPeriodStatus(c,rMarket);
       const fc=Object.values(D.faqs).filter(f=>f.campaignId===id&&f.status==='published').length;
       // Build market date rows for card
       let mktHtml='';
@@ -470,7 +528,7 @@ function openFaqs(id){rCampId=id;rView='faqs';rCat='all';rOpen=new Set();renderR
 
 function renderFaqs(el){
   const camp=D.campaigns[rCampId];if(!camp){rView='list';renderR();return;}
-  const mkts=mktList(camp),st=campStatus(camp,rMarket);
+  const mkts=mktList(camp),st=campPeriodStatus(camp,rMarket);
   const faqs=Object.entries(D.faqs)
     .filter(([,f])=>f.campaignId===rCampId&&f.status==='published'&&faqMatchMkt(f,rMarket))
     .sort(([,a],[,b])=>(b.publishedAt||0)-(a.publishedAt||0));
@@ -563,12 +621,13 @@ function renderAdmin(){
         <span class="caim">
           ${mktList(c).map(co=>'<span class="ctag">'+co+'</span>').join('')}
           <span class="sb ${st}" style="position:static">${st}</span>
+          ${c.status==='scheduled'&&c.publishAt?'<span style="font-size:11px;color:#1a56db">'+fmtDateTime(c.publishAt)+'</span>':''}
           <button class="btn btn-sm" onclick="event.stopPropagation();openCmpModal('${id}')" style="padding:4px 10px;font-size:11px">Edit</button>
         </span>
       </div>
       ${isOpen?`<div class="caib">
         <div style="padding:10px 16px;font-size:12px;color:var(--hi);border-bottom:1px solid var(--bd)">
-          ${mktList(c).map(m=>m+': '+fmtRange(mktDates(c,m))).join(' &nbsp;|&nbsp; ')+'&nbsp;·&nbsp;'}${cFaqs.length} question${cFaqs.length!==1?'s':''}
+          ${c.status==='scheduled'?'<span style="color:#1a56db;font-weight:500">Scheduled: '+fmtDateTime(c.publishAt)+' ('+fmtCountdown(c.publishAt)+')</span> &nbsp;·&nbsp; ':''} ${mktList(c).map(m=>m+': '+fmtRange(mktDates(c,m))).join(' &nbsp;|&nbsp; ')+'&nbsp;·&nbsp;'}${cFaqs.length} question${cFaqs.length!==1?'s':''}
         </div>
         <div class="cfqs">
           <div class="cfqh"><span>Questions</span><button class="btn btn-sm btn-p" onclick="openFaqModal('${id}',null)">+ Add question</button></div>
@@ -615,6 +674,9 @@ function openCmpModal(id){
   document.getElementById('cm-del').style.display=id?'inline-flex':'none';
   document.getElementById('cm-name').value=c.name||'';
   document.getElementById('cm-st').value=c.status||'published';
+  const pa=c.publishAt?new Date(c.publishAt).toISOString().slice(0,16):'';
+  document.getElementById('cm-publishAt').value=pa;
+  document.getElementById('cm-publish-at-wrap').style.display=c.status==='scheduled'?'block':'none';
   // Build markets from new format or migrate from old
   let cMarkets=c.markets||null;
   if(!cMarkets&&c.countries&&c.countries.length){
@@ -623,6 +685,10 @@ function openCmpModal(id){
   renderCmMarkets(cMarkets);
   document.getElementById('cm-modal').style.display='block';
   setTimeout(()=>document.getElementById('cm-name').focus(),100);
+}
+function toggleScheduledField(){
+  const v=document.getElementById('cm-st').value;
+  document.getElementById('cm-publish-at-wrap').style.display=v==='scheduled'?'block':'none';
 }
 function closeCmpModal(){document.getElementById('cm-modal').style.display='none';eCampId=null;}
 document.getElementById('cm-modal').onclick=e=>{if(e.target===document.getElementById('cm-modal'))closeCmpModal();};
@@ -636,7 +702,11 @@ async function saveCampaign(){
     }
   });
   if(!Object.keys(markets).length){alert('Select at least one market.');return;}
-  const pay={name,markets,status:document.getElementById('cm-st').value,updatedAt:Date.now()};
+  const vis=document.getElementById('cm-st').value;
+  const paVal=document.getElementById('cm-publishAt').value;
+  if(vis==='scheduled'&&!paVal){alert('Set a publish date and time for scheduled campaigns.');return;}
+  const publishAt=vis==='scheduled'?new Date(paVal).toISOString():null;
+  const pay={name,markets,status:vis,publishAt,updatedAt:Date.now()};
   if(eCampId){pay.createdAt=D.campaigns[eCampId]?.createdAt||Date.now();await fbS('/ncs-faq2/campaigns/'+eCampId,pay);}
   else{pay.createdAt=Date.now();const k=await fbP('/ncs-faq2/campaigns',pay);openC.add(k);}
   closeCmpModal();toast('Campaign saved');
