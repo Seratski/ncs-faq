@@ -158,6 +158,14 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .toast{position:fixed;bottom:24px;right:24px;background:#f96700;color:#fff;padding:10px 18px;border-radius:var(--r);font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .3s;z-index:999}
 .toast.show{opacity:1}
 .spin{font-size:12px;color:var(--mu);display:none}.spin.show{display:inline}
+.mkt-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--s2);border-radius:var(--rs);border:1px solid var(--bd)}
+.mkt-row input[type=checkbox]{accent-color:#f96700;cursor:pointer;flex-shrink:0}
+.mkt-row .mkt-label{font-size:13px;font-weight:600;width:32px;flex-shrink:0}
+.mkt-row .mkt-dates{display:flex;align-items:center;gap:6px;flex:1;flex-wrap:wrap}
+.mkt-row input[type=date]{padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--s);border:1px solid var(--bds);border-radius:var(--rs);color:var(--tx);outline:none;flex:1;min-width:110px}
+.mkt-row input[type=date]:disabled{opacity:0.35;background:var(--s2)}
+.mkt-row .mkt-sep{font-size:11px;color:var(--hi);flex-shrink:0}
+.mkt-status{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 6px;border-radius:4px;margin-left:4px}
 .src-lang-sel{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 14px}
 .sls-btn{padding:4px 12px;font-size:12px;font-weight:500;border:1px solid var(--bds);border-radius:6px;background:none;cursor:pointer;color:var(--mu);font-family:'DM Sans',sans-serif;transition:all .15s}
 .sls-btn.active{background:#252525;color:#fff;border-color:#252525}
@@ -257,17 +265,9 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
   <div class="mbx" onclick="event.stopPropagation()">
     <div class="mhdr"><h2 id="cm-t">New campaign</h2><button class="btn btn-sm" onclick="closeCmpModal()">✕</button></div>
     <div class="fld"><label>Campaign name</label><input id="cm-name" placeholder="e.g. Big Bang 2025"/></div>
-    <div class="fld"><label>Markets</label>
-      <div class="ccks">
-        <label class="cck"><input type="checkbox" id="cm-DK"/> Denmark (DK)</label>
-        <label class="cck"><input type="checkbox" id="cm-NO"/> Norway (NO)</label>
-        <label class="cck"><input type="checkbox" id="cm-SE"/> Sweden (SE)</label>
-        <label class="cck"><input type="checkbox" id="cm-FI"/> Finland (FI)</label>
-      </div>
-    </div>
-    <div class="frow">
-      <div class="fld"><label>Start date</label><input type="date" id="cm-s"/></div>
-      <div class="fld"><label>End date</label><input type="date" id="cm-e"/></div>
+    <div class="fld"><label>Markets &amp; date ranges</label>
+      <div id="cm-markets" style="display:flex;flex-direction:column;gap:8px;margin-top:4px"></div>
+      <div class="fhint">Each market can have its own campaign period. Leave dates empty for no time limit.</div>
     </div>
     <div class="fld"><label>Status</label><select id="cm-st"><option value="published">Published</option><option value="draft">Draft</option></select></div>
     <div class="mftr">
@@ -364,21 +364,48 @@ async function fbS(p,v){if(fbok)await db.ref(p).set(v);}
 async function fbP(p,v){if(fbok){const r=await db.ref(p).push(v);return r.key;}return 'k'+Date.now();}
 async function fbD(p){if(fbok)await db.ref(p).remove();}
 
-function campStatus(c){
+function mktDates(c,mkt){
+  // New format: markets object; fallback to old flat format
+  if(c.markets&&c.markets[mkt]) return c.markets[mkt];
+  if(c.startDate||c.endDate) return{startDate:c.startDate,endDate:c.endDate};
+  return{};
+}
+function mktList(c){
+  if(c.markets) return Object.keys(c.markets);
+  if(c.countries&&c.countries.length) return c.countries;
+  return[];
+}
+function mktStatus(c,mkt){
   if(c.status==='draft')return'draft';
   const now=new Date();now.setHours(0,0,0,0);
-  const s=c.startDate?new Date(c.startDate):null,e=c.endDate?new Date(c.endDate):null;
+  const d=mktDates(c,mkt);
+  const s=d.startDate?new Date(d.startDate):null,e=d.endDate?new Date(d.endDate):null;
   if(!s&&!e)return'active';
   if(s&&s>now)return'upcoming';
   if(e&&e<now)return'ended';
   return'active';
 }
+function campStatus(c,selMkt){
+  if(c.status==='draft')return'draft';
+  const mkts=mktList(c);
+  if(!mkts.length)return'active';
+  // If specific market selected, return that market's status
+  if(selMkt&&selMkt!=='ALL'&&mkts.includes(selMkt))return mktStatus(c,selMkt);
+  // Otherwise: active if ANY market active, else upcoming if any upcoming, else ended
+  const statuses=mkts.map(m=>mktStatus(c,m));
+  if(statuses.includes('active'))return'active';
+  if(statuses.includes('upcoming'))return'upcoming';
+  if(statuses.every(s=>s==='ended'))return'ended';
+  return'active';
+}
 function fmtDate(d){if(!d)return'';return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}
-function campMatchMkt(c,m){if(m==='ALL')return true;return!c.countries||!c.countries.length||c.countries.includes(m);}
+function fmtRange(d){if(!d)return'No date set';if(!d.startDate&&!d.endDate)return'No date set';if(d.startDate&&d.endDate)return fmtDate(d.startDate)+' → '+fmtDate(d.endDate);if(d.startDate)return 'From '+fmtDate(d.startDate);return'Until '+fmtDate(d.endDate);}
+function campMatchMkt(c,m){if(m==='ALL')return true;return mktList(c).includes(m)||(!mktList(c).length);}
 function faqMatchMkt(f,selM){if(selM==='ALL')return true;const fc=f.countries||[];if(!fc.length)return true;return fc.includes(selM);}
-function progress(c){
-  if(!c.startDate||!c.endDate)return null;
-  const now=Date.now(),s=new Date(c.startDate).getTime(),e=new Date(c.endDate).getTime();
+function progress(c,mkt){
+  const d=mkt&&mkt!=='ALL'?mktDates(c,mkt):(c.startDate?{startDate:c.startDate,endDate:c.endDate}:null);
+  if(!d||!d.startDate||!d.endDate)return null;
+  const now=Date.now(),s=new Date(d.startDate).getTime(),e=new Date(d.endDate).getTime();
   if(now<s)return 0;if(now>e)return 100;return Math.round((now-s)/(e-s)*100);
 }
 
@@ -400,17 +427,31 @@ function renderList(el){
     h+='<div class="cgrid">';
     show.sort(([,a],[,b])=>{const o={active:0,upcoming:1,ended:2};return(o[campStatus(a)]||0)-(o[campStatus(b)]||0);});
     show.forEach(([id,c])=>{
-      const st=campStatus(c),cc=c.countries||[],prog=progress(c);
+      const mkts=mktList(c);
+      const st=campStatus(c,rMarket);
       const fc=Object.values(D.faqs).filter(f=>f.campaignId===id&&f.status==='published').length;
-      h+=`<div class="cc${st!=='active'?' inactive':''}" onclick="openFaqs('${id}')">
-        <div class="cca ${st}"></div>
-        <span class="sb ${st}">${st}</span>
-        <div class="cn">${esc(c.name)}</div>
-        <div class="ctags">${cc.map(co=>`<span class="ctag${rMarket===co?' match':''}">${co}</span>`).join('')}</div>
-        <div class="cdates">${c.startDate||c.endDate?fmtDate(c.startDate)+(c.startDate&&c.endDate?' → ':'')+fmtDate(c.endDate):'No date set'}</div>
-        <div class="cfqc">${fc} question${fc!==1?'s':''}</div>
-        ${prog!==null?`<div class="pbar"><div class="pfill ${st}" style="width:${prog}%"></div></div><div class="pdates"><span>${fmtDate(c.startDate)}</span><span>${fmtDate(c.endDate)}</span></div>`:''}
-      </div>`;
+      // Build market date rows for card
+      let mktHtml='';
+      if(rMarket!=='ALL'&&mkts.includes(rMarket)){
+        const d=mktDates(c,rMarket),mst=mktStatus(c,rMarket),prog=progress(c,rMarket);
+        mktHtml='<div class="cdates">'+fmtRange(d)+'</div>';
+        if(prog!==null)mktHtml+='<div class="pbar"><div class="pfill '+mst+'" style="width:'+prog+'%"></div></div><div class="pdates"><span>'+fmtDate(d.startDate)+'</span><span>'+fmtDate(d.endDate)+'</span></div>';
+      }else{
+        // Show all markets with individual status
+        mktHtml='<div class="ctags" style="flex-direction:column;align-items:flex-start;gap:4px">';
+        mkts.forEach(m=>{
+          const d=mktDates(c,m),mst=mktStatus(c,m);
+          mktHtml+='<div style="display:flex;align-items:center;gap:6px;width:100%"><span class="ctag'+(rMarket===m?' match':'')+'" style="width:28px;text-align:center">'+m+'</span><span style="font-size:11px;color:var(--hi);flex:1">'+fmtRange(d)+'</span><span class="mkt-status status-'+mst+'">'+mst+'</span></div>';
+        });
+        mktHtml+='</div>';
+      }
+      h+='<div class="cc'+(st!=='active'?' inactive':'')+'" onclick="openFaqs(\''+id+'\')"">'
+        +'<div class="cca '+st+'"></div>'
+        +'<span class="sb '+st+'">'+st+'</span>'
+        +'<div class="cn">'+esc(c.name)+'</div>'
+        +mktHtml
+        +'<div class="cfqc" style="margin-top:8px">'+fc+' question'+(fc!==1?'s':'')+'</div>'
+        +'</div>';
     });
     h+='</div>';
   }
@@ -422,7 +463,7 @@ function openFaqs(id){rCampId=id;rView='faqs';rCat='all';rOpen=new Set();renderR
 
 function renderFaqs(el){
   const camp=D.campaigns[rCampId];if(!camp){rView='list';renderR();return;}
-  const st=campStatus(camp),cc=camp.countries||[];
+  const mkts=mktList(camp),st=campStatus(camp,rMarket);
   const faqs=Object.entries(D.faqs)
     .filter(([,f])=>f.campaignId===rCampId&&f.status==='published'&&faqMatchMkt(f,rMarket))
     .sort(([,a],[,b])=>(b.publishedAt||0)-(a.publishedAt||0));
@@ -443,8 +484,8 @@ function renderFaqs(el){
     <div class="fvt">${esc(camp.name)}</div>
     <div class="fvm">
       <span class="sb ${st}" style="position:static">${st}</span>
-      ${cc.map(c=>`<span class="ctag">${c}</span>`).join('')}
-      ${camp.startDate||camp.endDate?`<span style="font-size:12px;color:var(--hi)">${fmtDate(camp.startDate)}${camp.startDate&&camp.endDate?' → ':''}${fmtDate(camp.endDate)}</span>`:''}
+      ${mkts.map(m=>{const mst=mktStatus(camp,m),d=mktDates(camp,m);return'<span class="ctag'+(rMarket===m?' match':'')+'" style="display:inline-flex;align-items:center;gap:4px">'+m+'<span class="mkt-status status-'+mst+'" style="position:static;font-size:9px;padding:1px 5px">'+mst+'</span></span>';}).join('')}
+      ${rMarket!=='ALL'&&mkts.includes(rMarket)?'<span style="font-size:12px;color:var(--hi)">'+fmtRange(mktDates(camp,rMarket))+'</span>':''}
     </div>
   </div>
   <div class="sw"><span class="si">⌕</span><input class="sinp" id="rsearch" placeholder="Search questions..." oninput="renderR()"/></div>
@@ -513,14 +554,14 @@ function renderAdmin(){
       <div class="caih" onclick="toggleC('${id}')">
         <span class="cain">${esc(c.name)}</span>
         <span class="caim">
-          ${(c.countries||[]).map(co=>`<span class="ctag">${co}</span>`).join('')}
+          ${mktList(c).map(co=>'<span class="ctag">'+co+'</span>').join('')}
           <span class="sb ${st}" style="position:static">${st}</span>
           <button class="btn btn-sm" onclick="event.stopPropagation();openCmpModal('${id}')" style="padding:4px 10px;font-size:11px">Edit</button>
         </span>
       </div>
       ${isOpen?`<div class="caib">
         <div style="padding:10px 16px;font-size:12px;color:var(--hi);border-bottom:1px solid var(--bd)">
-          ${c.startDate||c.endDate?fmtDate(c.startDate)+' → '+fmtDate(c.endDate)+' &nbsp;·&nbsp; ':''}${cFaqs.length} question${cFaqs.length!==1?'s':''}
+          ${mktList(c).map(m=>m+': '+fmtRange(mktDates(c,m))).join(' &nbsp;|&nbsp; ')+'&nbsp;·&nbsp;'}${cFaqs.length} question${cFaqs.length!==1?'s':''}
         </div>
         <div class="cfqs">
           <div class="cfqh"><span>Questions</span><button class="btn btn-sm btn-p" onclick="openFaqModal('${id}',null)">+ Add question</button></div>
@@ -533,15 +574,40 @@ function renderAdmin(){
 function toggleC(id){openC.has(id)?openC.delete(id):openC.add(id);renderAdmin();}
 
 // ===== CAMPAIGN MODAL =====
+function renderCmMarkets(cMarkets){
+  const el=document.getElementById('cm-markets');
+  const MLABELS={DK:'Denmark',NO:'Norway',SE:'Sweden',FI:'Finland'};
+  el.innerHTML=MARKETS.map(m=>{
+    const d=(cMarkets&&cMarkets[m])||{};
+    const checked=cMarkets&&cMarkets[m]?'checked':'';
+    return '<div class="mkt-row" id="cmr-'+m+'">'
+      +'<input type="checkbox" id="cm-'+m+'" '+checked+' onchange="toggleCmMkt(\''+m+'\')">'
+      +'<span class="mkt-label">'+m+'</span>'
+      +'<div class="mkt-dates">'
+      +'<input type="date" id="cm-s-'+m+'" value="'+(d.startDate||'')+'" '+(checked?'':'disabled')+' placeholder="Start">'
+      +'<span class="mkt-sep">→</span>'
+      +'<input type="date" id="cm-e-'+m+'" value="'+(d.endDate||'')+'" '+(checked?'':'disabled')+' placeholder="End">'
+      +'</div></div>';
+  }).join('');
+}
+function toggleCmMkt(m){
+  const chk=document.getElementById('cm-'+m);
+  document.getElementById('cm-s-'+m).disabled=!chk.checked;
+  document.getElementById('cm-e-'+m).disabled=!chk.checked;
+  if(!chk.checked){document.getElementById('cm-s-'+m).value='';document.getElementById('cm-e-'+m).value='';}
+}
 function openCmpModal(id){
   eCampId=id;const c=id?D.campaigns[id]||{}:{};
   document.getElementById('cm-t').textContent=id?'Edit campaign':'New campaign';
   document.getElementById('cm-del').style.display=id?'inline-flex':'none';
   document.getElementById('cm-name').value=c.name||'';
-  document.getElementById('cm-s').value=c.startDate||'';
-  document.getElementById('cm-e').value=c.endDate||'';
   document.getElementById('cm-st').value=c.status||'published';
-  MARKETS.forEach(co=>document.getElementById('cm-'+co).checked=(c.countries||[]).includes(co));
+  // Build markets from new format or migrate from old
+  let cMarkets=c.markets||null;
+  if(!cMarkets&&c.countries&&c.countries.length){
+    cMarkets={};c.countries.forEach(m=>{cMarkets[m]={startDate:c.startDate||null,endDate:c.endDate||null};});
+  }
+  renderCmMarkets(cMarkets);
   document.getElementById('cm-modal').style.display='block';
   setTimeout(()=>document.getElementById('cm-name').focus(),100);
 }
@@ -550,8 +616,14 @@ document.getElementById('cm-modal').onclick=e=>{if(e.target===document.getElemen
 async function saveCampaign(){
   const name=document.getElementById('cm-name').value.trim();
   if(!name){alert('Campaign name required.');return;}
-  const countries=MARKETS.filter(co=>document.getElementById('cm-'+co).checked);
-  const pay={name,countries,startDate:document.getElementById('cm-s').value||null,endDate:document.getElementById('cm-e').value||null,status:document.getElementById('cm-st').value,updatedAt:Date.now()};
+  const markets={};
+  MARKETS.forEach(m=>{
+    if(document.getElementById('cm-'+m)?.checked){
+      markets[m]={startDate:document.getElementById('cm-s-'+m).value||null,endDate:document.getElementById('cm-e-'+m).value||null};
+    }
+  });
+  if(!Object.keys(markets).length){alert('Select at least one market.');return;}
+  const pay={name,markets,status:document.getElementById('cm-st').value,updatedAt:Date.now()};
   if(eCampId){pay.createdAt=D.campaigns[eCampId]?.createdAt||Date.now();await fbS('/ncs-faq2/campaigns/'+eCampId,pay);}
   else{pay.createdAt=Date.now();const k=await fbP('/ncs-faq2/campaigns',pay);openC.add(k);}
   closeCmpModal();toast('Campaign saved');
@@ -620,7 +692,7 @@ function openFaqModal(campId,faqId){
   document.getElementById('fm-sq').value=f.translations?.en?.q||'';
   document.getElementById('fm-sa').value=f.translations?.en?.a||'';
   // Market visibility
-  document.getElementById('fm-ctry').innerHTML=cc.map(co=>`<label class="cck"><input type="checkbox" value="${co}" ${fCtries.includes(co)?'checked':''} onchange="toggleFC('${co}',this)"/> ${co}</label>`).join('')||'<span style="font-size:12px;color:var(--hi)">Set markets on campaign first.</span>';
+  const cc2=mktList(camp);document.getElementById('fm-ctry').innerHTML=cc2.map(co=>'<label class="cck"><input type="checkbox" value="'+co+'" '+(fCtries.includes(co)?'checked':'')+' onchange="toggleFC(\''+co+'\',this)"/> '+co+'</label>').join('')||'<span style="font-size:12px;color:var(--hi)">Set markets on campaign first.</span>';
   // URLs
   const urls=f.urls||[{},{},{}];
   for(let i=1;i<=3;i++){const u=urls[i-1]||{};document.getElementById('url'+i+'-l').value=u.label||'';document.getElementById('url'+i+'-u').value=u.url||'';}
