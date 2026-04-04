@@ -471,9 +471,7 @@ function renderFaqs(el){
         </div>
         <span class="fch">▼</span>
       </div>
-      <div class="fa">${esc(t.a||'')}${!hasT&&rLang!=='en'?'
-<span class="fbnote">Not translated — showing English</span>':''}${urls.length?`
-<div class="fa-urls">${urls.map(u=>`<a class="fa-url" href="${esc(u.url)}" target="_blank" rel="noopener"><span class="fa-url-icon">↗</span>${esc(u.label)}</a>`).join('')}</div>`:''}</div>
+      <div class="fa">${esc(t.a||'')}${!hasT&&rLang!=='en'?'\n<span class="fbnote">Not translated \u2014 showing English</span>':''}${urls.length?`<div class="fa-urls">${urls.map(u=>`<a class="fa-url" href="${esc(u.url)}" target="_blank" rel="noopener"><span class="fa-url-icon">↗</span>${esc(u.label)}</a>`).join('')}</div>`:''}</div>
     </div>`;
   });
   h+='</div>';
