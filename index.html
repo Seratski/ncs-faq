@@ -712,14 +712,14 @@ function renderFaqs(el){
         svs.forEach((sv,i)=>{
           const tSv=(f.translations&&f.translations[rLang]&&f.translations[rLang].someVariants&&f.translations[rLang].someVariants[i])||sv||{};
           const lbl=esc(tSv.label||sv.label||'Variant '+(i+1));
-          const onclkSV='switchVariant('+JSON.stringify(id)+','+i+','+svs.length+',event)';
+          const onclkSV='switchVariant('+'\''+id+'\''+','+i+','+svs.length+',event)';
           aHtml+='<button class="vtab'+(i===0?' active':'')+'" onclick="'+onclkSV+'">'+lbl+'</button>';
         });
         aHtml+='</div>';
       }
       svs.forEach((sv,i)=>{
         const tSv=(f.translations&&f.translations[rLang]&&f.translations[rLang].someVariants&&f.translations[rLang].someVariants[i])||sv||{};
-        const onclkCP='copyAns('+JSON.stringify(id)+','+i+',true,event)';
+        const onclkCP='copyAns('+'\''+id+'\''+','+i+',true,event)';
         aHtml+='<div class="sv-body" id="sv-'+id+'-'+i+'" style="'+(i===0?'':'display:none')+'">'
           +esc(tSv.text||sv.text||'')
           +'<br/><button class="copy-btn" id="cpybtn-'+id+'-'+i+'" onclick="'+onclkCP+'">⎘ Copy</button>'
@@ -729,11 +729,11 @@ function renderFaqs(el){
     } else {
       aHtml=esc(t.a||'');
       if(hasFbnote)aHtml+='<br/><span class="fbnote">Not translated — showing English</span>';
-      const _cpyOnclk='copyAns('+JSON.stringify(id)+',0,false,event)';aHtml+='<br/><button class="copy-btn" id="cpybtn-'+id+'" onclick="'+_cpyOnclk+'">⎘ Copy</button>';
+      const _cpyOnclk='copyAns('+'\''+id+'\''+',0,false,event)';aHtml+='<br/><button class="copy-btn" id="cpybtn-'+id+'" onclick="'+_cpyOnclk+'">⎘ Copy</button>';
     }
     if(urls.length)aHtml+='<div class="fa-urls">'+urls.map(u=>'<a class="fa-url" href="'+esc(u.url)+'" target="_blank" rel="noopener"><span class="fa-url-icon">↗</span>'+esc(u.label)+'</a>').join('')+'</div>';
     h+='<div class="fc'+(isOpen?' open':'')+'" id="rc-'+id+'">'
-      +'<div class="fq" onclick="toggleR('+JSON.stringify(id)+')">'
+      +'<div class="fq" onclick="toggleR('+'\''+id+'\''+')">'
       +'<div class="fql2">'+(isNew?'<span class="bnew">New</span>':'')+(fMkts.length?'<span class="bctry">'+fMkts.join('/')+'</span>':'')+(f.someMode?'<span class="some-badge">SoMe</span>':'')+'<span class="fqt">'+esc(t.q||'')+'</span></div>'
       +'<span class="fch">▼</span></div>'
       +'<div class="fa">'+aHtml+'</div>'
@@ -822,6 +822,23 @@ function renderAdmin(){
 function toggleC(id){openC.has(id)?openC.delete(id):openC.add(id);renderAdmin();}
 
 // ===== CAMPAIGN MODAL =====
+function toDisplayDate(iso){
+  if(!iso)return'';
+  const[y,m,d]=iso.split('-');
+  return d+'/'+m+'/'+y;
+}
+function toIsoDate(display){
+  if(!display)return'';
+  const parts=display.split('/');
+  if(parts.length!==3)return'';
+  const[d,m,y]=parts;
+  if(!d||!m||!y||y.length!==4)return'';
+  return y+'-'+m.padStart(2,'0')+'-'+d.padStart(2,'0');
+}
+function isValidDisplayDate(s){
+  if(!s)return true;
+  return/^\d{2}\/\d{2}\/\d{4}$/.test(s)&&!isNaN(new Date(toIsoDate(s)));
+}
 function renderCmMarkets(cMarkets){
   const el=document.getElementById('cm-markets');
   const MLABELS={DK:'Denmark',NO:'Norway',SE:'Sweden',FI:'Finland'};
@@ -835,9 +852,9 @@ function renderCmMarkets(cMarkets){
       +'<span class="mkt-name">'+MLABELS[m]+'</span>'
       +'</div>'
       +'<div class="mkt-dates">'
-      +'<div class="mkt-date-field"><label>Start date</label><input type="date" id="cm-s-'+m+'" value="'+(d.startDate||'')+'" '+(on?'':'disabled')+'></div>'
+      +'<div class="mkt-date-field"><label>Start date</label><input type="text" id="cm-s-'+m+'" value="'+toDisplayDate(d.startDate||'')+'" placeholder="dd/mm/yyyy" maxlength="10" '+(on?'':'disabled')+'></div>'
       +'<span class="mkt-sep">→</span>'
-      +'<div class="mkt-date-field"><label>End date</label><input type="date" id="cm-e-'+m+'" value="'+(d.endDate||'')+'" '+(on?'':'disabled')+'></div>'
+      +'<div class="mkt-date-field"><label>End date</label><input type="text" id="cm-e-'+m+'" value="'+toDisplayDate(d.endDate||'')+'" placeholder="dd/mm/yyyy" maxlength="10" '+(on?'':'disabled')+'></div>'
       +'</div>'
       +'</div>';
   }).join('');
@@ -878,11 +895,17 @@ async function saveCampaign(){
   const name=document.getElementById('cm-name').value.trim();
   if(!name){alert('Campaign name required.');return;}
   const markets={};
+  let dateError=null;
   MARKETS.forEach(m=>{
     if(document.getElementById('cm-'+m)?.checked){
-      markets[m]={startDate:document.getElementById('cm-s-'+m).value||null,endDate:document.getElementById('cm-e-'+m).value||null};
+      const sv=document.getElementById('cm-s-'+m).value.trim();
+      const ev=document.getElementById('cm-e-'+m).value.trim();
+      if(sv&&!isValidDisplayDate(sv)){dateError='Invalid start date for '+m+'. Use dd/mm/yyyy';}
+      if(ev&&!isValidDisplayDate(ev)){dateError='Invalid end date for '+m+'. Use dd/mm/yyyy';}
+      markets[m]={startDate:sv?toIsoDate(sv):null,endDate:ev?toIsoDate(ev):null};
     }
   });
+  if(dateError){alert(dateError);return;}
   if(!Object.keys(markets).length){alert('Select at least one market.');return;}
   const vis=document.getElementById('cm-st').value;
   const paVal=document.getElementById('cm-publishAt').value;
@@ -1021,46 +1044,60 @@ async function translateFaq(){
   if(!q||!a){alert('Write the question and answer first.');return;}
   const btn=document.getElementById('fm-tbtn'),spin=document.getElementById('fm-spin');
   btn.disabled=true;spin.classList.add('show');
-  // Store source content
   fTrans[srcLang]={q,a};
-  // Determine targets: trLangs + always include EN if srcLang != en
   const targets=new Set(trLangs);
   if(srcLang!=='en')targets.add('en');
   targets.delete(srcLang);
   const srcCode=MYCODES[srcLang]||srcLang;
+  let stdOk=false,someOk=true;
+  // Step 1: translate standard Q&A
   try{
     for(const l of targets){
       const tgtCode=MYCODES[l]||l;
-      const rq=await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(q)}&langpair=${srcCode}|${tgtCode}&de=ncs@power.dk`);
-      const dq=await rq.json();await sleep(350);
-      const ra=await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(a)}&langpair=${srcCode}|${tgtCode}&de=ncs@power.dk`);
-      const da_=await ra.json();await sleep(350);
-      if(String(dq.responseStatus)==='200'&&String(da_.responseStatus)==='200')fTrans[l]={q:dq.responseData.translatedText,a:da_.responseData.translatedText};
-    }
-    // Also translate SoMe variants if active
-    if(faqSomeMode&&someVariants.length){
-      saveSomeVariants();
-      for(const sv of someVariants){
-        if(!sv.text)continue;
-        for(const[l,code]of[['da','da'],['sv','sv'],['fi','fi'],['no','nb'],['en','en']]){
-          if(l===srcLang)continue;
-          if(!trLangs.includes(l)&&l!=='en')continue;
-          const rt=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(sv.text)+'&langpair='+MYCODES[srcLang]+'|'+code+'&de=ncs@power.dk');
-          const dt=await rt.json();await sleep(350);
-          if(String(dt.responseStatus)==='200'){
-            if(!fTrans[l])fTrans[l]={};
-            if(!fTrans[l].someVariants)fTrans[l].someVariants=someVariants.map(v=>({label:v.label,text:''}));
-            const idx=someVariants.indexOf(sv);
-            if(fTrans[l].someVariants[idx])fTrans[l].someVariants[idx].text=dt.responseData.translatedText;
-            if(fTrans[l].someVariants[idx])fTrans[l].someVariants[idx].label=sv.label;
-          }
-        }
+      const rq=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(q)+'&langpair='+srcCode+'|'+tgtCode+'&de=ncs@power.dk');
+      const dq=await rq.json();await sleep(450);
+      const ra=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(a)+'&langpair='+srcCode+'|'+tgtCode+'&de=ncs@power.dk');
+      const da_=await ra.json();await sleep(450);
+      if(String(dq.responseStatus)==='200'&&String(da_.responseStatus)==='200'){
+        if(!fTrans[l])fTrans[l]={};
+        fTrans[l].q=dq.responseData.translatedText;
+        fTrans[l].a=da_.responseData.translatedText;
       }
     }
-    renderFaqLangTabs();toast('Translated successfully');
-  }catch(e){alert('Translation failed — try again or add manually.');}
-  finally{btn.disabled=false;spin.classList.remove('show');}
+    stdOk=true;
+  }catch(e){console.warn('Standard translation error:',e);}
+  // Step 2: SoMe variants — separate try/catch, won't block standard result
+  if(faqSomeMode){
+    saveSomeVariants();
+    const activeVars=someVariants.filter(v=>v.text);
+    if(activeVars.length){
+      someOk=false;
+      try{
+        for(const sv of activeVars){
+          const svIdx=someVariants.indexOf(sv);
+          for(const l of targets){
+            const tgtCode=MYCODES[l]||l;
+            const rt=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(sv.text)+'&langpair='+srcCode+'|'+tgtCode+'&de=ncs@power.dk');
+            const dt=await rt.json();await sleep(450);
+            if(String(dt.responseStatus)==='200'){
+              if(!fTrans[l])fTrans[l]={};
+              if(!fTrans[l].someVariants)fTrans[l].someVariants=someVariants.map(v=>({label:v.label,text:''}));
+              while(fTrans[l].someVariants.length<=svIdx)fTrans[l].someVariants.push({label:'',text:''});
+              fTrans[l].someVariants[svIdx]={label:sv.label,text:dt.responseData.translatedText};
+            }
+          }
+        }
+        someOk=true;
+      }catch(e){console.warn('SoMe variant translation error:',e);}
+    }
+  }
+  renderFaqLangTabs();
+  if(stdOk&&someOk)toast('Translated successfully');
+  else if(stdOk)toast('Standard translated — SoMe variants may be incomplete. Try again.');
+  else toast('Translation failed — please try again.');
+  btn.disabled=false;spin.classList.remove('show');
 }
+
 
 async function saveFaq(){
   saveFT();
