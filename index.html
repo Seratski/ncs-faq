@@ -24,6 +24,10 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .lb:last-child{border-right:none}.lb.active{background:#f96700;color:#fff}
 .al{font-size:12px;color:rgba(255,255,255,0.4);cursor:pointer;padding:4px 8px;border-radius:var(--rs);transition:all .15s}
 .al:hover{color:#fff;background:rgba(255,255,255,0.1)}
+.ch-switcher{display:flex;border:1px solid rgba(255,255,255,0.15);border-radius:6px;overflow:hidden}
+.ch-btn{padding:4px 10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.45);border-right:1px solid rgba(255,255,255,0.1);transition:all .15s;letter-spacing:.01em}
+.ch-btn:last-child{border-right:none}
+.ch-btn.active{background:rgba(255,255,255,0.12);color:#fff}
 .main{max-width:900px;margin:0 auto;padding:28px 20px 80px}
 .fbar{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--bd)}
 .gsearch-wrap{position:relative;margin-bottom:20px}
@@ -174,6 +178,41 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .toast{position:fixed;bottom:24px;right:24px;background:#f96700;color:#fff;padding:10px 18px;border-radius:var(--r);font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .3s;z-index:999}
 .toast.show{opacity:1}
 .spin{font-size:12px;color:var(--mu);display:none}.spin.show{display:inline}
+.type-card{padding:12px 10px;border:1px solid var(--bds);border-radius:var(--r);cursor:pointer;transition:all .15s;background:var(--s2);text-align:center}
+.type-card:hover{border-color:#f96700;background:#fff8f3}
+.type-card.selected{border-color:#f96700;background:#fff8f3}
+.type-card-label{font-size:12px;font-weight:600;color:var(--tx);line-height:1.3}
+.type-card{padding:12px 10px;border:1px solid var(--bds);border-radius:var(--r);cursor:pointer;transition:all .15s;background:var(--s2);text-align:center}
+.type-card:hover{border-color:#f96700;background:#fff8f3}
+.type-card.selected{border-color:#f96700;background:#fff8f3}
+.type-card-label{font-size:12px;font-weight:600;color:var(--tx);line-height:1.3}
+
+
+/* SoMe toggle in admin */
+.some-toggle-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--s2);border-radius:var(--rs);border:1px solid var(--bd);margin-bottom:10px;cursor:pointer;user-select:none}
+.some-toggle-row input[type=checkbox]{accent-color:#f96700;width:16px;height:16px;cursor:pointer}
+.some-toggle-label{font-size:13px;font-weight:500;flex:1}
+.some-toggle-hint{font-size:11px;color:var(--hi)}
+.some-variants-wrap{border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;margin-bottom:10px}
+.some-variant-hdr{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--s2);border-bottom:1px solid var(--bd)}
+.some-variant-hdr span{font-size:12px;font-weight:600;color:var(--mu)}
+.some-variant-body{padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.some-variant-label-inp{padding:7px 10px;font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif;background:var(--s);border:1px solid var(--bds);border-radius:var(--rs);color:var(--tx);outline:none;width:160px}
+.some-variant-label-inp:focus{border-color:#f96700}
+.add-variant-btn{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#f96700;cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;padding:4px 0;font-weight:500}
+.add-variant-btn:hover{text-decoration:underline}
+.rm-variant-btn{background:none;border:none;cursor:pointer;color:var(--hi);font-size:13px;padding:2px 4px}
+.rm-variant-btn:hover{color:#cc2200}
+
+/* Reader variant tabs + copy */
+.variant-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)}
+.vtab{padding:4px 12px;font-size:12px;font-weight:500;border:1px solid var(--bds);border-radius:20px;background:none;cursor:pointer;color:var(--mu);font-family:'DM Sans',sans-serif;transition:all .15s}
+.vtab:hover{border-color:#f96700;color:var(--tx)}
+.vtab.active{background:#f96700;color:#fff;border-color:#f96700}
+.copy-btn{display:inline-flex;align-items:center;gap:5px;margin-top:10px;padding:6px 14px;font-size:12px;font-weight:500;border:1px solid var(--bds);border-radius:var(--rs);background:var(--s);color:var(--mu);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+.copy-btn:hover{background:var(--s2);color:var(--tx)}
+.copy-btn.copied{background:#fff3e0;color:#c45000;border-color:rgba(249,103,0,0.3)}
+.some-badge{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 6px;border-radius:4px;background:#e8f0fe;color:#1a56db;flex-shrink:0;margin-top:2px}
 .mkt-row{display:grid;grid-template-columns:20px 52px 1fr;align-items:center;gap:0;border-bottom:1px solid var(--bd);padding:10px 0}
 .mkt-row:last-child{border-bottom:none}
 .mkt-row input[type=checkbox]{accent-color:#f96700;cursor:pointer;width:16px;height:16px}
@@ -196,8 +235,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .tr-lang-checks label{display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer}
 .tr-lang-checks input{accent-color:#f96700;cursor:pointer}
 @media(max-width:600px){.ti,.main{padding-left:14px;padding-right:14px}.cgrid{grid-template-columns:1fr}.url-row{flex-wrap:wrap}.url-row .fld:first-child{flex:0 0 100%}}
-</style>
-</head>
+</style></head>
 <body>
 
 <div id="page-reader" class="page active">
@@ -213,6 +251,10 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
           <button class="lb" onclick="setLang('fi',this)">FI</button>
           <button class="lb" onclick="setLang('no',this)">NO</button>
         </div>
+      </div>
+      <div class="ch-switcher" id="ch-switcher">
+        <button class="ch-btn active" data-ch="standard" onclick="setChBtn(this)">All</button>
+        <button class="ch-btn" data-ch="some" onclick="setChBtn(this)">SoMe</button>
       </div>
       <span class="al" onclick="showPinGate()">Admin</span>
     </div>
@@ -261,9 +303,9 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
     </div>
   </div></div>
   <div class="main">
-    <div class="ah"><h1>Manage FAQ</h1><button class="btn btn-p" onclick="openCmpModal(null)">+ New campaign</button></div>
+    <div class="ah"><h1>Manage FAQs</h1><button class="btn btn-p" onclick="openCmpModal(null)">+ New FAQ</button></div>
     <div class="atabs">
-      <div class="atab active" onclick="setTab('campaigns',this)">Campaigns</div>
+      <div class="atab active" onclick="setTab('campaigns',this)">FAQs</div>
       <div class="atab" onclick="setTab('categories',this)">Categories</div>
       <div class="atab" onclick="setTab('settings',this)">Settings</div>
     </div>
@@ -291,8 +333,8 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 <!-- Campaign Modal -->
 <div class="mbk" id="cm-modal">
   <div class="mbx" onclick="event.stopPropagation()">
-    <div class="mhdr"><h2 id="cm-t">New campaign</h2><button class="btn btn-sm" onclick="closeCmpModal()">✕</button></div>
-    <div class="fld"><label>Campaign name</label><input id="cm-name" placeholder="e.g. Big Bang 2025"/></div>
+    <div class="mhdr"><h2 id="cm-t">New FAQ</h2><button class="btn btn-sm" onclick="closeCmpModal()">✕</button></div>
+    <div class="fld"><label>FAQ title</label><input id="cm-name" placeholder="e.g. Big Bang 2025"/></div>
     <div class="fld"><label>Markets &amp; date ranges</label>
       <div style="border:1px solid var(--bd);border-radius:var(--r);padding:4px 14px 0;margin-top:6px;background:var(--s)" id="cm-markets"></div>
       <div class="fhint" style="margin-top:8px">Check a market to include it. Dates are optional — leave empty for no time limit.</div>
@@ -306,11 +348,20 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
     </div>
     <div class="fld" id="cm-publish-at-wrap" style="display:none">
       <label>Publish date &amp; time</label>
-      <input type="datetime-local" id="cm-publishAt"/>
-      <div class="fhint">Readers will see this campaign automatically from this moment.</div>
+      <div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">
+        <div style="flex:1;min-width:120px">
+          <input type="text" id="cm-publishAt-date" placeholder="dd/mm/yyyy" maxlength="10"/>
+          <div class="fhint">Date</div>
+        </div>
+        <div style="width:80px">
+          <input type="text" id="cm-publishAt-time" placeholder="hh:mm" maxlength="5"/>
+          <div class="fhint">Time</div>
+        </div>
+      </div>
+      <div class="fhint" style="margin-top:6px">Readers will see this FAQ automatically from this moment.</div>
     </div>
     <div class="mftr">
-      <button class="btn btn-d" id="cm-del" onclick="deleteCampaign()" style="display:none">Delete campaign</button>
+      <button class="btn btn-d" id="cm-del" onclick="deleteCampaign()" style="display:none">Delete FAQ</button>
       <button class="btn" onclick="closeCmpModal()">Cancel</button>
       <button class="btn btn-p" onclick="saveCampaign()">Save campaign</button>
     </div>
@@ -330,6 +381,11 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
       <div class="fhint">Leave all unchecked = visible in all campaign markets.</div>
     </div>
 
+    <div class="some-toggle-row" onclick="toggleSomeMode()">
+      <input type="checkbox" id="fm-some-toggle" onclick="event.stopPropagation();toggleSomeMode()"/>
+      <span class="some-toggle-label">This question has a SoMe variant</span>
+      <span class="some-toggle-hint">Enables separate SoMe answer with tone variants</span>
+    </div>
     <div class="stl" style="margin-bottom:6px">Source language</div>
     <div class="fhint" style="margin-bottom:8px">Write your question and answer in any language — we'll translate the rest automatically.</div>
     <div class="src-lang-sel" id="src-lang-sel">
@@ -342,7 +398,12 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
     <div class="fld"><label id="fm-sql">Question</label><input id="fm-sq" placeholder="Question..."/></div>
     <div class="fld"><label id="fm-sal">Answer</label><textarea id="fm-sa" style="min-height:90px" placeholder="Answer..."></textarea></div>
 
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px">
+    <div id="fm-some-section" style="display:none;margin-top:4px">
+      <div class="stl" style="margin-bottom:8px;margin-top:8px">SoMe variants (source language)</div>
+      <div id="fm-some-variants"></div>
+      <button class="add-variant-btn" onclick="addSomeVariant()" id="fm-add-variant-btn">+ Add variant</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px;margin-top:12px">
       <button class="btn btn-tr btn-sm" id="fm-tbtn" onclick="translateFaq()">Auto-translate</button>
       <span class="spin" id="fm-spin">Translating...</span>
     </div>
@@ -380,6 +441,11 @@ const MARKETS=['DK','NO','SE','FI'];
 const MYCODES={en:'en',da:'da',sv:'sv',fi:'fi',no:'nb'};
 
 let db,fbok=false;
+let agentCtx='standard'; // 'standard' or 'some'
+let rTypeFilter=null; // null = all types
+
+let faqSomeMode=false;
+let someVariants=[]; // [{label,text}] source lang variants
 let D={campaigns:{},faqs:{},cats:[],pin:'1234'};
 let rLang='en',rMarket='ALL',rView='list',rCampId=null,rCat='all',rShowAll=false,rOpen=new Set();
 let auth=false,eCampId=null,eFaqId=null,eFaqCampId=null;
@@ -565,13 +631,23 @@ function openFromSearch(cid,fid){
 }
 
 function renderList(el){
-  const all=Object.entries(D.campaigns).filter(([,c])=>isPublishedToReaders(c)&&campMatchMkt(c,rMarket));
+  const all=Object.entries(D.campaigns).filter(([,c])=>isPublishedToReaders(c)&&campMatchMkt(c,rMarket)&&(rTypeFilter===null||c.faqType===rTypeFilter));
   const active=all.filter(([,c])=>campStatus(c)==='active');
   const others=all.filter(([,c])=>campStatus(c)!=='active');
   const show=rShowAll?[...active,...others]:active;
-  let h='<div class="ch"><h2>Campaigns</h2></div>';
+  // Build type filter bar if multiple types present
+  const presentTypes=[...new Set(Object.values(D.campaigns)
+    .filter(c=>isPublishedToReaders(c)&&campMatchMkt(c,rMarket))
+    .map(c=>c.faqType).filter(Boolean))];
+  let h='';
+  if(presentTypes.length>1){
+    h+='<div class="cat-bar" style="margin-bottom:16px">'
+      +'<button class="cp'+(rTypeFilter===null?' active':'')+'" onclick="setTypeFilter(null)">All types</button>'
+      +presentTypes.map(tid=>{const t=getType(tid);return '<button class="cp'+(rTypeFilter===tid?' active':'')+'" onclick="setTypeFilter(this.dataset.tid)" data-tid="'+tid+'">'+t.label+'</button>';}).join('')
+      +'</div>';
+  }
   if(!show.length){
-    h+=`<div class="nc">No active campaigns${rMarket!=='ALL'?' for '+rMarket:''}.<br/><a style="color:#f96700;cursor:pointer" onclick="forceShowAll()">Show all campaigns</a></div>`;
+    h+=`<div class="nc">No active FAQs${rMarket!=='ALL'?' for '+rMarket:''}.<br/><a style="color:#f96700;cursor:pointer" onclick="forceShowAll()">Show all campaigns</a></div>`;
   }else{
     h+='<div class="cgrid">';
     show.sort(([,a],[,b])=>{const o={active:0,upcoming:1,ended:2};return(o[campPeriodStatus(a,rMarket)]||0)-(o[campPeriodStatus(b,rMarket)]||0);});
@@ -597,7 +673,13 @@ function renderList(el){
       h+='<div class="cc'+(st!=='active'?' inactive':'')+'" onclick="openFaqs(\''+id+'\')"">'
         +'<div class="cca '+st+'"></div>'
         +'<span class="sb '+st+'">'+st+'</span>'
-        +'<div class="cn">'+esc(c.name)+'</div>'
+        +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">'
+      +(c.faqType?'<span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:4px;background:var(--s2);color:var(--mu);border:1px solid var(--bd)">'+getType(c.faqType).label+'</span>':'')
+      +'</div>'
+      +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">'
+      +(c.faqType?'<span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:4px;background:var(--s2);color:var(--mu);border:1px solid var(--bd)">'+getType(c.faqType).label+'</span>':'')
+      +'</div>'
+      +'<div class="cn">'+esc(c.name)+'</div>'
         +mktHtml
         +'<div class="cfqc" style="margin-top:8px">'+fc+' question'+(fc!==1?'s':'')+'</div>'
         +'</div>';
@@ -608,13 +690,15 @@ function renderList(el){
 }
 
 function forceShowAll(){rShowAll=true;const chk=document.querySelector('.sat input');if(chk)chk.checked=true;renderR();}
+function setTypeFilter(t){rTypeFilter=t;renderR();}
+function setTypeFilter(t){rTypeFilter=t;renderR();}
 function openFaqs(id){rCampId=id;rView='faqs';rCat='all';rOpen=new Set();renderR();window.scrollTo(0,0);}
 
 function renderFaqs(el){
   const camp=D.campaigns[rCampId];if(!camp){rView='list';renderR();return;}
   const mkts=mktList(camp),st=campPeriodStatus(camp,rMarket);
   const faqs=Object.entries(D.faqs)
-    .filter(([,f])=>f.campaignId===rCampId&&f.status==='published'&&faqMatchMkt(f,rMarket))
+    .filter(([,f])=>f.campaignId===rCampId&&f.status==='published'&&faqMatchMkt(f,rMarket)&&(agentCtx==='some'||!f.someOnly))
     .sort(([,a],[,b])=>(b.publishedAt||0)-(a.publishedAt||0));
   const search=(document.getElementById('rsearch')?.value||'').toLowerCase();
   const usedCats=[...new Set(faqs.map(([,f])=>f.cat).filter(Boolean))];
@@ -626,7 +710,7 @@ function renderFaqs(el){
   });
   const now=Date.now(),NW=14*24*60*60*1000;
   let h=`<div class="bc">
-    <span class="bcl" onclick="backToList()">← Campaigns</span>
+    <span class="bcl" onclick="backToList()">← FAQs</span>
     <span class="bcs">/</span><span class="bcc">${esc(camp.name)}</span>
   </div>
   <div class="fvh">
@@ -668,6 +752,30 @@ function renderFaqs(el){
   el.innerHTML=h;
 }
 function backToList(){rView='list';rCampId=null;renderR();}
+function switchVariant(fid,idx,total,e){
+  e&&e.stopPropagation();
+  for(let i=0;i<total;i++){
+    const b=document.querySelector('#sv-wrap-'+fid+' .variant-tabs .vtab:nth-child('+(i+1)+')');
+    const body=document.getElementById('sv-'+fid+'-'+i);
+    if(b)b.classList.toggle('active',i===idx);
+    if(body)body.style.display=i===idx?'':'none';
+  }
+}
+function copyAns(fid,idx,isSome,e){
+  e&&e.stopPropagation();
+  let text='';
+  if(isSome){
+    const el=document.getElementById('sv-'+fid+'-'+idx);
+    text=el?el.innerText.replace(/⎘ Copy/,'').trim():'';
+  } else {
+    const fa=document.getElementById('rc-'+fid)?.querySelector('.fa');
+    if(fa){const cl=fa.cloneNode(true);cl.querySelector('.copy-btn')?.remove();cl.querySelectorAll('.fa-url-icon,.fa-urls,.fbnote').forEach(x=>x.remove());text=cl.innerText.trim();}
+  }
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=isSome?document.getElementById('cpybtn-'+fid+'-'+idx):document.getElementById('cpybtn-'+fid);
+    if(btn){btn.textContent='✓ Copied';btn.classList.add('copied');setTimeout(()=>{btn.textContent='⎘ Copy';btn.classList.remove('copied');},2000);}
+  }).catch(()=>{});
+}
 function setRCat(c){rCat=c;renderR();}
 function toggleR(id){rOpen.has(id)?rOpen.delete(id):rOpen.add(id);const el=document.getElementById('rc-'+id);if(el)el.classList.toggle('open',rOpen.has(id));}
 
@@ -682,7 +790,7 @@ function setTab(t,b){document.querySelectorAll('.atab').forEach(x=>x.classList.r
 function renderAdmin(){
   const el=document.getElementById('calist');
   const camps=Object.entries(D.campaigns).sort(([,a],[,b])=>(b.createdAt||0)-(a.createdAt||0));
-  if(!camps.length){el.innerHTML='<div class="es" style="padding:40px 0">No campaigns yet.</div>';return;}
+  if(!camps.length){el.innerHTML='<div class="es" style="padding:40px 0">No FAQs yet.</div>';return;}
   el.innerHTML=camps.map(([id,c])=>{
     const st=campStatus(c),isOpen=openC.has(id);
     const cFaqs=Object.entries(D.faqs).filter(([,f])=>f.campaignId===id).sort(([,a],[,b])=>(b.createdAt||0)-(a.createdAt||0));
@@ -701,6 +809,8 @@ function renderAdmin(){
     return `<div class="cai" id="cai-${id}">
       <div class="caih" onclick="toggleC('${id}')">
         <span class="cain">${esc(c.name)}</span>
+          ${c.faqType?'<span style="font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;background:var(--s2);color:var(--mu);border:1px solid var(--bd)">'+getType(c.faqType).label+'</span>':''}
+          ${c.faqType?'<span style="font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;background:var(--s2);color:var(--mu);border:1px solid var(--bd)">'+getType(c.faqType).label+'</span>':''}
         <span class="caim">
           ${mktList(c).map(co=>'<span class="ctag">'+co+'</span>').join('')}
           <span class="sb ${st}" style="position:static">${st}</span>
@@ -723,6 +833,38 @@ function renderAdmin(){
 function toggleC(id){openC.has(id)?openC.delete(id):openC.add(id);renderAdmin();}
 
 // ===== CAMPAIGN MODAL =====
+function getType(id){return FAQ_TYPES.find(t=>t.id===id)||FAQ_TYPES[0];}
+
+const FAQ_TYPES=[
+  {id:'campaign',    label:'Campaign',        placeholder:'e.g. Crazy Days',              autoMarkets:null},
+  {id:'peak',        label:'Peak',            placeholder:'e.g. Black Friday Week',        autoMarkets:null},
+  {id:'event',       label:'Event',           placeholder:'e.g. Power City Event',         autoMarkets:null},
+  {id:'opening',     label:'Store opening',   placeholder:'e.g. Store Opening Fisketorvet',autoMarkets:1},
+  {id:'reopening',   label:'Store re-opening',placeholder:'e.g. Store Re-opening Køge',   autoMarkets:1},
+  {id:'anniversary', label:'Anniversary',     placeholder:'e.g. 10 Year Anniversary',      autoMarkets:null},
+  {id:'christmas',   label:'Christmas',       placeholder:'e.g. Christmas Sales',          autoMarkets:null},
+  {id:'january',     label:'January sale',    placeholder:'e.g. January Sales',            autoMarkets:null},
+  {id:'other',       label:'Other',           placeholder:'e.g. Power Live',               autoMarkets:null},
+];
+function getType(id){return FAQ_TYPES.find(t=>t.id===id)||FAQ_TYPES[0];}
+
+function toDisplayDate(iso){
+  if(!iso)return'';
+  const[y,m,d]=iso.split('-');
+  return d+'/'+m+'/'+y;
+}
+function toIsoDate(display){
+  if(!display)return'';
+  const parts=display.split('/');
+  if(parts.length!==3)return'';
+  const[d,m,y]=parts;
+  if(!d||!m||!y||y.length!==4)return'';
+  return y+'-'+m.padStart(2,'0')+'-'+d.padStart(2,'0');
+}
+function isValidDisplayDate(s){
+  if(!s)return true;
+  return/^\d{2}\/\d{2}\/\d{4}$/.test(s)&&!isNaN(new Date(toIsoDate(s)));
+}
 function renderCmMarkets(cMarkets){
   const el=document.getElementById('cm-markets');
   const MLABELS={DK:'Denmark',NO:'Norway',SE:'Sweden',FI:'Finland'};
@@ -736,9 +878,9 @@ function renderCmMarkets(cMarkets){
       +'<span class="mkt-name">'+MLABELS[m]+'</span>'
       +'</div>'
       +'<div class="mkt-dates">'
-      +'<div class="mkt-date-field"><label>Start date</label><input type="date" id="cm-s-'+m+'" value="'+(d.startDate||'')+'" '+(on?'':'disabled')+'></div>'
+      +'<div class="mkt-date-field"><label>Start date</label><input type="text" id="cm-s-'+m+'" value="'+toDisplayDate(d.startDate||'')+'" placeholder="dd/mm/yyyy" maxlength="10" '+(on?'':'disabled')+'></div>'
       +'<span class="mkt-sep">→</span>'
-      +'<div class="mkt-date-field"><label>End date</label><input type="date" id="cm-e-'+m+'" value="'+(d.endDate||'')+'" '+(on?'':'disabled')+'></div>'
+      +'<div class="mkt-date-field"><label>End date</label><input type="text" id="cm-e-'+m+'" value="'+toDisplayDate(d.endDate||'')+'" placeholder="dd/mm/yyyy" maxlength="10" '+(on?'':'disabled')+'></div>'
       +'</div>'
       +'</div>';
   }).join('');
@@ -752,38 +894,78 @@ function toggleCmMkt(m){
   if(!chk.checked){document.getElementById('cm-s-'+m).value='';document.getElementById('cm-e-'+m).value='';}
 }
 function openCmpModal(id){
-  eCampId=id;const c=id?D.campaigns[id]||{}:{};
-  document.getElementById('cm-t').textContent=id?'Edit campaign':'New campaign';
+  eCampId=id;
+  const c=id?D.campaigns[id]||{}:{};
+  document.getElementById('cm-t').textContent=id?'Edit FAQ':'New FAQ';
   document.getElementById('cm-del').style.display=id?'inline-flex':'none';
-  document.getElementById('cm-name').value=c.name||'';
-  document.getElementById('cm-st').value=c.status||'published';
-  const pa=c.publishAt?new Date(c.publishAt).toISOString().slice(0,16):'';
-  document.getElementById('cm-publishAt').value=pa;
-  document.getElementById('cm-publish-at-wrap').style.display=c.status==='scheduled'?'block':'none';
-  // Build markets from new format or migrate from old
-  let cMarkets=c.markets||null;
-  if(!cMarkets&&c.countries&&c.countries.length){
+  // Render type grid
+  renderTypeGrid(c.faqType||null);
+  if(id){
+    // Editing: skip type step, show form directly
+    showCmForm(c.faqType||'campaign',c);
+  } else {
+    // New: show type step first
+    document.getElementById('cm-type-step').style.display='block';
+    document.getElementById('cm-form-step').style.display='none';
+  }
+  document.getElementById('cm-modal').style.display='block';
+}
+function renderTypeGrid(selectedType){
+  const el=document.getElementById('cm-type-grid');
+  el.innerHTML=FAQ_TYPES.map(t=>
+    '<div class="type-card'+(selectedType===t.id?' selected':'')+'" onclick="selectCmType('+t.id+')">'
+    +'<div class="type-card-label">'+t.label+'</div>'
+    +'</div>'
+  ).join('');
+}
+function selectCmType(typeId){
+  document.getElementById('cm-type-step').style.display='none';
+  showCmForm(typeId,null);
+}
+function resetCmType(){
+  document.getElementById('cm-type-step').style.display='block';
+  document.getElementById('cm-form-step').style.display='none';
+}
+function showCmForm(typeId,c){
+  const t=getType(typeId);
+  document.getElementById('cm-type-badge').textContent=t.label;
+  document.getElementById('cm-name').placeholder=t.placeholder;
+  document.getElementById('cm-name').value=c?c.name||'':'';
+  document.getElementById('cm-st').value=c?c.status||'published':'published';
+  // Handle scheduled datetime
+  const pa=c&&c.publishAt?new Date(c.publishAt):null;
+  document.getElementById('cm-publishAt-date').value=pa?toDisplayDate(pa.toISOString().slice(0,10)):'';
+  document.getElementById('cm-publishAt-time').value=pa?(String(pa.getHours()).padStart(2,'0')+':'+String(pa.getMinutes()).padStart(2,'0')):'';
+  document.getElementById('cm-publish-at-wrap').style.display=c&&c.status==='scheduled'?'block':'none';
+  // Store type selection
+  document.getElementById('cm-form-step').dataset.type=typeId;
+  // Markets — auto-select single if store opening type
+  let cMarkets=c?c.markets||null:null;
+  if(!cMarkets&&c&&c.countries&&c.countries.length){
     cMarkets={};c.countries.forEach(m=>{cMarkets[m]={startDate:c.startDate||null,endDate:c.endDate||null};});
   }
+  // For store types with no existing data, pre-check nothing (user picks one)
   renderCmMarkets(cMarkets);
-  document.getElementById('cm-modal').style.display='block';
-  setTimeout(()=>document.getElementById('cm-name').focus(),100);
+  document.getElementById('cm-form-step').style.display='block';
 }
-function toggleScheduledField(){
-  const v=document.getElementById('cm-st').value;
-  document.getElementById('cm-publish-at-wrap').style.display=v==='scheduled'?'block':'none';
-}
+
 function closeCmpModal(){document.getElementById('cm-modal').style.display='none';eCampId=null;}
 document.getElementById('cm-modal').onclick=e=>{if(e.target===document.getElementById('cm-modal'))closeCmpModal();};
 async function saveCampaign(){
   const name=document.getElementById('cm-name').value.trim();
-  if(!name){alert('Campaign name required.');return;}
+  if(!name){alert('FAQ title required.');return;}
   const markets={};
+  let dateError=null;
   MARKETS.forEach(m=>{
     if(document.getElementById('cm-'+m)?.checked){
-      markets[m]={startDate:document.getElementById('cm-s-'+m).value||null,endDate:document.getElementById('cm-e-'+m).value||null};
+      const sv=document.getElementById('cm-s-'+m).value.trim();
+      const ev=document.getElementById('cm-e-'+m).value.trim();
+      if(sv&&!isValidDisplayDate(sv)){dateError='Invalid start date for '+m+'. Use dd/mm/yyyy';}
+      if(ev&&!isValidDisplayDate(ev)){dateError='Invalid end date for '+m+'. Use dd/mm/yyyy';}
+      markets[m]={startDate:sv?toIsoDate(sv):null,endDate:ev?toIsoDate(ev):null};
     }
   });
+  if(dateError){alert(dateError);return;}
   if(!Object.keys(markets).length){alert('Select at least one market.');return;}
   const vis=document.getElementById('cm-st').value;
   const paVal=document.getElementById('cm-publishAt').value;
@@ -792,7 +974,7 @@ async function saveCampaign(){
   const pay={name,markets,status:vis,publishAt,updatedAt:Date.now()};
   if(eCampId){pay.createdAt=D.campaigns[eCampId]?.createdAt||Date.now();await fbS('/ncs-faq2/campaigns/'+eCampId,pay);}
   else{pay.createdAt=Date.now();const k=await fbP('/ncs-faq2/campaigns',pay);openC.add(k);}
-  closeCmpModal();toast('Campaign saved');
+  closeCmpModal();toast('FAQ saved');
 }
 async function deleteCampaign(){
   if(!eCampId)return;
@@ -858,15 +1040,60 @@ function openFaqModal(campId,faqId){
   document.getElementById('fm-sq').value=f.translations?.en?.q||'';
   document.getElementById('fm-sa').value=f.translations?.en?.a||'';
   // Market visibility
-  const cc2=mktList(camp);document.getElementById('fm-ctry').innerHTML=cc2.map(co=>'<label class="cck"><input type="checkbox" value="'+co+'" '+(fCtries.includes(co)?'checked':'')+' onchange="toggleFC(\''+co+'\',this)"/> '+co+'</label>').join('')||'<span style="font-size:12px;color:var(--hi)">Set markets on campaign first.</span>';
+  const cc2=mktList(camp);document.getElementById('fm-ctry').innerHTML=cc2.map(co=>'<label class="cck"><input type="checkbox" value="'+co+'" '+(fCtries.includes(co)?'checked':'')+' onchange="toggleFC(\''+co+'\',this)"/> '+co+'</label>').join('')||'<span style="font-size:12px;color:var(--hi)">Set markets on FAQ first.</span>';
   // URLs
   const urls=f.urls||[{},{},{}];
   for(let i=1;i<=3;i++){const u=urls[i-1]||{};document.getElementById('url'+i+'-l').value=u.label||'';document.getElementById('url'+i+'-u').value=u.url||'';}
+  // SoMe mode
+  faqSomeMode=!!(faqId&&f.someMode);
+  someVariants=faqId&&f.someVariants&&f.someVariants.length?JSON.parse(JSON.stringify(f.someVariants)):[{label:'Standard',text:''}];
+  document.getElementById('fm-some-toggle').checked=faqSomeMode;
+  document.getElementById('fm-some-section').style.display=faqSomeMode?'block':'none';
+  renderSomeVariants();
   renderTrLangChecks();
   renderFaqLangTabs();
   document.getElementById('fm-modal').style.display='block';
 }
-function closeFaqModal(){saveFT();document.getElementById('fm-modal').style.display='none';eFaqId=null;}
+function closeFaqModal(){saveFT();saveSomeVariants();document.getElementById('fm-modal').style.display='none';eFaqId=null;}
+function toggleSomeMode(){
+  faqSomeMode=document.getElementById('fm-some-toggle').checked;
+  document.getElementById('fm-some-section').style.display=faqSomeMode?'block':'none';
+}
+function renderSomeVariants(){
+  const el=document.getElementById('fm-some-variants');
+  if(!el)return;
+  if(!someVariants.length)someVariants=[{label:'Standard',text:''}];
+  el.innerHTML=someVariants.map((v,i)=>`
+    <div class="some-variants-wrap" id="sv-admin-${i}">
+      <div class="some-variant-hdr">
+        <span>Variant ${i+1}</span>
+        <input class="some-variant-label-inp" placeholder="Label (e.g. Standard, Kæk...)" value="${esc(v.label||'')}" oninput="someVariants[${i}].label=this.value" style="margin-left:auto"/>
+        ${someVariants.length>1?`<button class="rm-variant-btn" onclick="removeSomeVariant(${i})">✕</button>`:''}
+      </div>
+      <div class="some-variant-body">
+        <textarea style="width:100%;min-height:72px;padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--s2);border:1px solid var(--bds);border-radius:var(--rs);color:var(--tx);outline:none;resize:vertical;line-height:1.6" placeholder="SoMe answer variant ${i+1}..." oninput="someVariants[${i}].text=this.value">${esc(v.text||'')}</textarea>
+      </div>
+    </div>`).join('');
+  document.getElementById('fm-add-variant-btn').style.display=someVariants.length>=3?'none':'inline-flex';
+}
+function addSomeVariant(){
+  if(someVariants.length>=3)return;
+  someVariants.push({label:'',text:''});
+  renderSomeVariants();
+}
+function removeSomeVariant(i){
+  someVariants.splice(i,1);
+  renderSomeVariants();
+}
+function saveSomeVariants(){
+  // Sync textarea values to someVariants (in case oninput missed something)
+  someVariants.forEach((v,i)=>{
+    const ta=document.querySelector('#sv-admin-'+i+' textarea');
+    if(ta)v.text=ta.value;
+    const inp=document.querySelector('#sv-admin-'+i+' .some-variant-label-inp');
+    if(inp)v.label=inp.value;
+  });
+}
 document.getElementById('fm-modal').onclick=e=>{if(e.target===document.getElementById('fm-modal'))closeFaqModal();};
 function toggleFC(co,chk){if(chk.checked){if(!fCtries.includes(co))fCtries.push(co);}else fCtries=fCtries.filter(c=>c!==co);}
 function setFaqTab(l,b){saveFT();fTab=l;renderFaqLangTabs();}
@@ -893,6 +1120,26 @@ async function translateFaq(){
       const da_=await ra.json();await sleep(350);
       if(String(dq.responseStatus)==='200'&&String(da_.responseStatus)==='200')fTrans[l]={q:dq.responseData.translatedText,a:da_.responseData.translatedText};
     }
+    // Also translate SoMe variants if active
+    if(faqSomeMode&&someVariants.length){
+      saveSomeVariants();
+      for(const sv of someVariants){
+        if(!sv.text)continue;
+        for(const[l,code]of[['da','da'],['sv','sv'],['fi','fi'],['no','nb'],['en','en']]){
+          if(l===srcLang)continue;
+          if(!trLangs.includes(l)&&l!=='en')continue;
+          const rt=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(sv.text)+'&langpair='+MYCODES[srcLang]+'|'+code+'&de=ncs@power.dk');
+          const dt=await rt.json();await sleep(350);
+          if(String(dt.responseStatus)==='200'){
+            if(!fTrans[l])fTrans[l]={};
+            if(!fTrans[l].someVariants)fTrans[l].someVariants=someVariants.map(v=>({label:v.label,text:''}));
+            const idx=someVariants.indexOf(sv);
+            if(fTrans[l].someVariants[idx])fTrans[l].someVariants[idx].text=dt.responseData.translatedText;
+            if(fTrans[l].someVariants[idx])fTrans[l].someVariants[idx].label=sv.label;
+          }
+        }
+      }
+    }
     renderFaqLangTabs();toast('Translated successfully');
   }catch(e){alert('Translation failed — try again or add manually.');}
   finally{btn.disabled=false;spin.classList.remove('show');}
@@ -907,7 +1154,9 @@ async function saveFaq(){
   const urls=[];
   for(let i=1;i<=3;i++){const l=document.getElementById('url'+i+'-l').value.trim(),u=document.getElementById('url'+i+'-u').value.trim();if(l&&u)urls.push({label:l,url:u});}
   const now=Date.now();
-  const pay={campaignId:eFaqCampId,cat:document.getElementById('fm-cat').value,status:document.getElementById('fm-st').value,countries:fCtries,translations:fTrans,urls,updatedAt:now};
+  saveSomeVariants();
+  const cleanVariants=someVariants.filter(v=>v.text||v.label);
+  const pay={campaignId:eFaqCampId,cat:document.getElementById('fm-cat').value,status:document.getElementById('fm-st').value,countries:fCtries,translations:fTrans,urls,someMode:faqSomeMode,someVariants:faqSomeMode?cleanVariants:[],updatedAt:now};
   if(eFaqId){const prev=D.faqs[eFaqId]||{};pay.createdAt=prev.createdAt||now;if(pay.status==='published'&&prev.status!=='published')pay.publishedAt=now;else if(prev.publishedAt)pay.publishedAt=prev.publishedAt;await fbS('/ncs-faq2/faqs/'+eFaqId,pay);}
   else{pay.createdAt=now;if(pay.status==='published')pay.publishedAt=now;await fbP('/ncs-faq2/faqs',pay);}
   closeFaqModal();toast('Question saved');
@@ -930,6 +1179,25 @@ async function changePin(){
 }
 
 if(!fbok)renderR();
+
+// Channel init — no gate, just remember preference
+function initChannel(){
+  const saved=localStorage.getItem('ncs-channel');
+  if(saved==='some'){
+    agentCtx='some';
+    const btn=document.querySelector('.ch-btn[data-ch="some"]');
+    const allBtn=document.querySelector('.ch-btn[data-ch="standard"]');
+    if(btn)btn.classList.add('active');
+    if(allBtn)allBtn.classList.remove('active');
+  }
+}
+function setChBtn(btn){
+  agentCtx=btn.dataset.ch;
+  localStorage.setItem('ncs-channel',agentCtx);
+  document.querySelectorAll('.ch-btn').forEach(b=>b.classList.toggle('active',b===btn));
+  renderR();
+}
+initChannel();
 </script>
 </body>
 </html>
