@@ -24,6 +24,10 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .lb:last-child{border-right:none}.lb.active{background:#f96700;color:#fff}
 .al{font-size:12px;color:rgba(255,255,255,0.4);cursor:pointer;padding:4px 8px;border-radius:var(--rs);transition:all .15s}
 .al:hover{color:#fff;background:rgba(255,255,255,0.1)}
+.ch-switcher{display:flex;border:1px solid rgba(255,255,255,0.15);border-radius:6px;overflow:hidden}
+.ch-btn{padding:4px 10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.45);border-right:1px solid rgba(255,255,255,0.1);transition:all .15s;letter-spacing:.01em}
+.ch-btn:last-child{border-right:none}
+.ch-btn.active{background:rgba(255,255,255,0.12);color:#fff}
 .main{max-width:900px;margin:0 auto;padding:28px 20px 80px}
 .fbar{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--bd)}
 .gsearch-wrap{position:relative;margin-bottom:20px}
@@ -174,6 +178,33 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .toast{position:fixed;bottom:24px;right:24px;background:#f96700;color:#fff;padding:10px 18px;border-radius:var(--r);font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .3s;z-index:999}
 .toast.show{opacity:1}
 .spin{font-size:12px;color:var(--mu);display:none}.spin.show{display:inline}
+
+
+/* SoMe toggle in admin */
+.some-toggle-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--s2);border-radius:var(--rs);border:1px solid var(--bd);margin-bottom:10px;cursor:pointer;user-select:none}
+.some-toggle-row input[type=checkbox]{accent-color:#f96700;width:16px;height:16px;cursor:pointer}
+.some-toggle-label{font-size:13px;font-weight:500;flex:1}
+.some-toggle-hint{font-size:11px;color:var(--hi)}
+.some-variants-wrap{border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;margin-bottom:10px}
+.some-variant-hdr{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--s2);border-bottom:1px solid var(--bd)}
+.some-variant-hdr span{font-size:12px;font-weight:600;color:var(--mu)}
+.some-variant-body{padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.some-variant-label-inp{padding:7px 10px;font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif;background:var(--s);border:1px solid var(--bds);border-radius:var(--rs);color:var(--tx);outline:none;width:160px}
+.some-variant-label-inp:focus{border-color:#f96700}
+.add-variant-btn{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#f96700;cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;padding:4px 0;font-weight:500}
+.add-variant-btn:hover{text-decoration:underline}
+.rm-variant-btn{background:none;border:none;cursor:pointer;color:var(--hi);font-size:13px;padding:2px 4px}
+.rm-variant-btn:hover{color:#cc2200}
+
+/* Reader variant tabs + copy */
+.variant-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)}
+.vtab{padding:4px 12px;font-size:12px;font-weight:500;border:1px solid var(--bds);border-radius:20px;background:none;cursor:pointer;color:var(--mu);font-family:'DM Sans',sans-serif;transition:all .15s}
+.vtab:hover{border-color:#f96700;color:var(--tx)}
+.vtab.active{background:#f96700;color:#fff;border-color:#f96700}
+.copy-btn{display:inline-flex;align-items:center;gap:5px;margin-top:10px;padding:6px 14px;font-size:12px;font-weight:500;border:1px solid var(--bds);border-radius:var(--rs);background:var(--s);color:var(--mu);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+.copy-btn:hover{background:var(--s2);color:var(--tx)}
+.copy-btn.copied{background:#fff3e0;color:#c45000;border-color:rgba(249,103,0,0.3)}
+.some-badge{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 6px;border-radius:4px;background:#e8f0fe;color:#1a56db;flex-shrink:0;margin-top:2px}
 .mkt-row{display:grid;grid-template-columns:20px 52px 1fr;align-items:center;gap:0;border-bottom:1px solid var(--bd);padding:10px 0}
 .mkt-row:last-child{border-bottom:none}
 .mkt-row input[type=checkbox]{accent-color:#f96700;cursor:pointer;width:16px;height:16px}
@@ -213,6 +244,10 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
           <button class="lb" onclick="setLang('fi',this)">FI</button>
           <button class="lb" onclick="setLang('no',this)">NO</button>
         </div>
+      </div>
+      <div class="ch-switcher" id="ch-switcher">
+        <button class="ch-btn active" data-ch="standard" onclick="setChBtn(this)">All</button>
+        <button class="ch-btn" data-ch="some" onclick="setChBtn(this)">SoMe</button>
       </div>
       <span class="al" onclick="showPinGate()">Admin</span>
     </div>
@@ -330,6 +365,11 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
       <div class="fhint">Leave all unchecked = visible in all campaign markets.</div>
     </div>
 
+    <div class="some-toggle-row" onclick="toggleSomeMode()">
+      <input type="checkbox" id="fm-some-toggle" onclick="event.stopPropagation();toggleSomeMode()"/>
+      <span class="some-toggle-label">This question has a SoMe variant</span>
+      <span class="some-toggle-hint">Enables separate SoMe answer with tone variants</span>
+    </div>
     <div class="stl" style="margin-bottom:6px">Source language</div>
     <div class="fhint" style="margin-bottom:8px">Write your question and answer in any language — we'll translate the rest automatically.</div>
     <div class="src-lang-sel" id="src-lang-sel">
@@ -342,7 +382,12 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
     <div class="fld"><label id="fm-sql">Question</label><input id="fm-sq" placeholder="Question..."/></div>
     <div class="fld"><label id="fm-sal">Answer</label><textarea id="fm-sa" style="min-height:90px" placeholder="Answer..."></textarea></div>
 
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px">
+    <div id="fm-some-section" style="display:none;margin-top:4px">
+      <div class="stl" style="margin-bottom:8px;margin-top:8px">SoMe variants (source language)</div>
+      <div id="fm-some-variants"></div>
+      <button class="add-variant-btn" onclick="addSomeVariant()" id="fm-add-variant-btn">+ Add variant</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px;margin-top:12px">
       <button class="btn btn-tr btn-sm" id="fm-tbtn" onclick="translateFaq()">Auto-translate</button>
       <span class="spin" id="fm-spin">Translating...</span>
     </div>
@@ -380,6 +425,9 @@ const MARKETS=['DK','NO','SE','FI'];
 const MYCODES={en:'en',da:'da',sv:'sv',fi:'fi',no:'nb'};
 
 let db,fbok=false;
+let agentCtx='standard'; // 'standard' or 'some'
+let faqSomeMode=false;
+let someVariants=[]; // [{label,text}] source lang variants
 let D={campaigns:{},faqs:{},cats:[],pin:'1234'};
 let rLang='en',rMarket='ALL',rView='list',rCampId=null,rCat='all',rShowAll=false,rOpen=new Set();
 let auth=false,eCampId=null,eFaqId=null,eFaqCampId=null;
@@ -614,7 +662,7 @@ function renderFaqs(el){
   const camp=D.campaigns[rCampId];if(!camp){rView='list';renderR();return;}
   const mkts=mktList(camp),st=campPeriodStatus(camp,rMarket);
   const faqs=Object.entries(D.faqs)
-    .filter(([,f])=>f.campaignId===rCampId&&f.status==='published'&&faqMatchMkt(f,rMarket))
+    .filter(([,f])=>f.campaignId===rCampId&&f.status==='published'&&faqMatchMkt(f,rMarket)&&(agentCtx==='some'||!f.someOnly))
     .sort(([,a],[,b])=>(b.publishedAt||0)-(a.publishedAt||0));
   const search=(document.getElementById('rsearch')?.value||'').toLowerCase();
   const usedCats=[...new Set(faqs.map(([,f])=>f.cat).filter(Boolean))];
@@ -652,23 +700,73 @@ function renderFaqs(el){
     const isOpen=rOpen.has(id);
     const fMkts=f.countries||[];
     const urls=(f.urls||[]).filter(u=>u&&u.url&&u.label);
-    h+=`<div class="fc${isOpen?' open':''}" id="rc-${id}">
-      <div class="fq" onclick="toggleR('${id}')">
-        <div class="fql2">
-          ${isNew?'<span class="bnew">New</span>':''}
-          ${fMkts.length?`<span class="bctry">${fMkts.join('/')}</span>`:''}
-          <span class="fqt">${esc(t.q||'')}</span>
-        </div>
-        <span class="fch">▼</span>
-      </div>
-      <div class="fa">${esc(t.a||'')}${!hasT&&rLang!=='en'?' <span class="fbnote">Not translated — showing English</span>':''}${urls.length?`
-<div class="fa-urls">${urls.map(u=>`<a class="fa-url" href="${esc(u.url)}" target="_blank" rel="noopener"><span class="fa-url-icon">↗</span>${esc(u.label)}</a>`).join('')}</div>`:''}</div>
-    </div>`;
+    const showSome=agentCtx==='some'&&f.someMode&&f.someVariants&&f.someVariants.length;
+    const hasFbnote=!hasT&&rLang!=='en';
+    // Build answer HTML
+    let aHtml='';
+    if(showSome){
+      const svs=f.someVariants;
+      aHtml='<div id="sv-wrap-'+id+'">';
+      if(svs.length>1){
+        aHtml+='<div class="variant-tabs">';
+        svs.forEach((sv,i)=>{
+          const tSv=(f.translations&&f.translations[rLang]&&f.translations[rLang].someVariants&&f.translations[rLang].someVariants[i])||sv||{};
+          const lbl=esc(tSv.label||sv.label||'Variant '+(i+1));
+          const onclkSV='switchVariant('+JSON.stringify(id)+','+i+','+svs.length+',event)';
+          aHtml+='<button class="vtab'+(i===0?' active':'')+'" onclick="'+onclkSV+'">'+lbl+'</button>';
+        });
+        aHtml+='</div>';
+      }
+      svs.forEach((sv,i)=>{
+        const tSv=(f.translations&&f.translations[rLang]&&f.translations[rLang].someVariants&&f.translations[rLang].someVariants[i])||sv||{};
+        const onclkCP='copyAns('+JSON.stringify(id)+','+i+',true,event)';
+        aHtml+='<div class="sv-body" id="sv-'+id+'-'+i+'" style="'+(i===0?'':'display:none')+'">'
+          +esc(tSv.text||sv.text||'')
+          +'<br/><button class="copy-btn" id="cpybtn-'+id+'-'+i+'" onclick="'+onclkCP+'">⎘ Copy</button>'
+          +'</div>';
+      });
+      aHtml+='</div>';
+    } else {
+      aHtml=esc(t.a||'');
+      if(hasFbnote)aHtml+='<br/><span class="fbnote">Not translated — showing English</span>';
+      const _cpyOnclk='copyAns('+JSON.stringify(id)+',0,false,event)';aHtml+='<br/><button class="copy-btn" id="cpybtn-'+id+'" onclick="'+_cpyOnclk+'">⎘ Copy</button>';
+    }
+    if(urls.length)aHtml+='<div class="fa-urls">'+urls.map(u=>'<a class="fa-url" href="'+esc(u.url)+'" target="_blank" rel="noopener"><span class="fa-url-icon">↗</span>'+esc(u.label)+'</a>').join('')+'</div>';
+    h+='<div class="fc'+(isOpen?' open':'')+'" id="rc-'+id+'">'
+      +'<div class="fq" onclick="toggleR('+JSON.stringify(id)+')">'
+      +'<div class="fql2">'+(isNew?'<span class="bnew">New</span>':'')+(fMkts.length?'<span class="bctry">'+fMkts.join('/')+'</span>':'')+(f.someMode?'<span class="some-badge">SoMe</span>':'')+'<span class="fqt">'+esc(t.q||'')+'</span></div>'
+      +'<span class="fch">▼</span></div>'
+      +'<div class="fa">'+aHtml+'</div>'
+      +'</div>';
   });
   h+='</div>';
   el.innerHTML=h;
 }
 function backToList(){rView='list';rCampId=null;renderR();}
+function switchVariant(fid,idx,total,e){
+  e&&e.stopPropagation();
+  for(let i=0;i<total;i++){
+    const b=document.querySelector('#sv-wrap-'+fid+' .variant-tabs .vtab:nth-child('+(i+1)+')');
+    const body=document.getElementById('sv-'+fid+'-'+i);
+    if(b)b.classList.toggle('active',i===idx);
+    if(body)body.style.display=i===idx?'':'none';
+  }
+}
+function copyAns(fid,idx,isSome,e){
+  e&&e.stopPropagation();
+  let text='';
+  if(isSome){
+    const el=document.getElementById('sv-'+fid+'-'+idx);
+    text=el?el.innerText.replace(/⎘ Copy/,'').trim():'';
+  } else {
+    const fa=document.getElementById('rc-'+fid)?.querySelector('.fa');
+    if(fa){const cl=fa.cloneNode(true);cl.querySelector('.copy-btn')?.remove();cl.querySelectorAll('.fa-url-icon,.fa-urls,.fbnote').forEach(x=>x.remove());text=cl.innerText.trim();}
+  }
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=isSome?document.getElementById('cpybtn-'+fid+'-'+idx):document.getElementById('cpybtn-'+fid);
+    if(btn){btn.textContent='✓ Copied';btn.classList.add('copied');setTimeout(()=>{btn.textContent='⎘ Copy';btn.classList.remove('copied');},2000);}
+  }).catch(()=>{});
+}
 function setRCat(c){rCat=c;renderR();}
 function toggleR(id){rOpen.has(id)?rOpen.delete(id):rOpen.add(id);const el=document.getElementById('rc-'+id);if(el)el.classList.toggle('open',rOpen.has(id));}
 
@@ -863,11 +961,56 @@ function openFaqModal(campId,faqId){
   // URLs
   const urls=f.urls||[{},{},{}];
   for(let i=1;i<=3;i++){const u=urls[i-1]||{};document.getElementById('url'+i+'-l').value=u.label||'';document.getElementById('url'+i+'-u').value=u.url||'';}
+  // SoMe mode
+  faqSomeMode=!!(faqId&&f.someMode);
+  someVariants=faqId&&f.someVariants&&f.someVariants.length?JSON.parse(JSON.stringify(f.someVariants)):[{label:'Standard',text:''}];
+  document.getElementById('fm-some-toggle').checked=faqSomeMode;
+  document.getElementById('fm-some-section').style.display=faqSomeMode?'block':'none';
+  renderSomeVariants();
   renderTrLangChecks();
   renderFaqLangTabs();
   document.getElementById('fm-modal').style.display='block';
 }
-function closeFaqModal(){saveFT();document.getElementById('fm-modal').style.display='none';eFaqId=null;}
+function closeFaqModal(){saveFT();saveSomeVariants();document.getElementById('fm-modal').style.display='none';eFaqId=null;}
+function toggleSomeMode(){
+  faqSomeMode=document.getElementById('fm-some-toggle').checked;
+  document.getElementById('fm-some-section').style.display=faqSomeMode?'block':'none';
+}
+function renderSomeVariants(){
+  const el=document.getElementById('fm-some-variants');
+  if(!el)return;
+  if(!someVariants.length)someVariants=[{label:'Standard',text:''}];
+  el.innerHTML=someVariants.map((v,i)=>`
+    <div class="some-variants-wrap" id="sv-admin-${i}">
+      <div class="some-variant-hdr">
+        <span>Variant ${i+1}</span>
+        <input class="some-variant-label-inp" placeholder="Label (e.g. Standard, Kæk...)" value="${esc(v.label||'')}" oninput="someVariants[${i}].label=this.value" style="margin-left:auto"/>
+        ${someVariants.length>1?`<button class="rm-variant-btn" onclick="removeSomeVariant(${i})">✕</button>`:''}
+      </div>
+      <div class="some-variant-body">
+        <textarea style="width:100%;min-height:72px;padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--s2);border:1px solid var(--bds);border-radius:var(--rs);color:var(--tx);outline:none;resize:vertical;line-height:1.6" placeholder="SoMe answer variant ${i+1}..." oninput="someVariants[${i}].text=this.value">${esc(v.text||'')}</textarea>
+      </div>
+    </div>`).join('');
+  document.getElementById('fm-add-variant-btn').style.display=someVariants.length>=3?'none':'inline-flex';
+}
+function addSomeVariant(){
+  if(someVariants.length>=3)return;
+  someVariants.push({label:'',text:''});
+  renderSomeVariants();
+}
+function removeSomeVariant(i){
+  someVariants.splice(i,1);
+  renderSomeVariants();
+}
+function saveSomeVariants(){
+  // Sync textarea values to someVariants (in case oninput missed something)
+  someVariants.forEach((v,i)=>{
+    const ta=document.querySelector('#sv-admin-'+i+' textarea');
+    if(ta)v.text=ta.value;
+    const inp=document.querySelector('#sv-admin-'+i+' .some-variant-label-inp');
+    if(inp)v.label=inp.value;
+  });
+}
 document.getElementById('fm-modal').onclick=e=>{if(e.target===document.getElementById('fm-modal'))closeFaqModal();};
 function toggleFC(co,chk){if(chk.checked){if(!fCtries.includes(co))fCtries.push(co);}else fCtries=fCtries.filter(c=>c!==co);}
 function setFaqTab(l,b){saveFT();fTab=l;renderFaqLangTabs();}
@@ -894,6 +1037,26 @@ async function translateFaq(){
       const da_=await ra.json();await sleep(350);
       if(String(dq.responseStatus)==='200'&&String(da_.responseStatus)==='200')fTrans[l]={q:dq.responseData.translatedText,a:da_.responseData.translatedText};
     }
+    // Also translate SoMe variants if active
+    if(faqSomeMode&&someVariants.length){
+      saveSomeVariants();
+      for(const sv of someVariants){
+        if(!sv.text)continue;
+        for(const[l,code]of[['da','da'],['sv','sv'],['fi','fi'],['no','nb'],['en','en']]){
+          if(l===srcLang)continue;
+          if(!trLangs.includes(l)&&l!=='en')continue;
+          const rt=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(sv.text)+'&langpair='+MYCODES[srcLang]+'|'+code+'&de=ncs@power.dk');
+          const dt=await rt.json();await sleep(350);
+          if(String(dt.responseStatus)==='200'){
+            if(!fTrans[l])fTrans[l]={};
+            if(!fTrans[l].someVariants)fTrans[l].someVariants=someVariants.map(v=>({label:v.label,text:''}));
+            const idx=someVariants.indexOf(sv);
+            if(fTrans[l].someVariants[idx])fTrans[l].someVariants[idx].text=dt.responseData.translatedText;
+            if(fTrans[l].someVariants[idx])fTrans[l].someVariants[idx].label=sv.label;
+          }
+        }
+      }
+    }
     renderFaqLangTabs();toast('Translated successfully');
   }catch(e){alert('Translation failed — try again or add manually.');}
   finally{btn.disabled=false;spin.classList.remove('show');}
@@ -908,7 +1071,9 @@ async function saveFaq(){
   const urls=[];
   for(let i=1;i<=3;i++){const l=document.getElementById('url'+i+'-l').value.trim(),u=document.getElementById('url'+i+'-u').value.trim();if(l&&u)urls.push({label:l,url:u});}
   const now=Date.now();
-  const pay={campaignId:eFaqCampId,cat:document.getElementById('fm-cat').value,status:document.getElementById('fm-st').value,countries:fCtries,translations:fTrans,urls,updatedAt:now};
+  saveSomeVariants();
+  const cleanVariants=someVariants.filter(v=>v.text||v.label);
+  const pay={campaignId:eFaqCampId,cat:document.getElementById('fm-cat').value,status:document.getElementById('fm-st').value,countries:fCtries,translations:fTrans,urls,someMode:faqSomeMode,someVariants:faqSomeMode?cleanVariants:[],updatedAt:now};
   if(eFaqId){const prev=D.faqs[eFaqId]||{};pay.createdAt=prev.createdAt||now;if(pay.status==='published'&&prev.status!=='published')pay.publishedAt=now;else if(prev.publishedAt)pay.publishedAt=prev.publishedAt;await fbS('/ncs-faq2/faqs/'+eFaqId,pay);}
   else{pay.createdAt=now;if(pay.status==='published')pay.publishedAt=now;await fbP('/ncs-faq2/faqs',pay);}
   closeFaqModal();toast('Question saved');
@@ -931,6 +1096,25 @@ async function changePin(){
 }
 
 if(!fbok)renderR();
+
+// Channel init — no gate, just remember preference
+function initChannel(){
+  const saved=localStorage.getItem('ncs-channel');
+  if(saved==='some'){
+    agentCtx='some';
+    const btn=document.querySelector('.ch-btn[data-ch="some"]');
+    const allBtn=document.querySelector('.ch-btn[data-ch="standard"]');
+    if(btn)btn.classList.add('active');
+    if(allBtn)allBtn.classList.remove('active');
+  }
+}
+function setChBtn(btn){
+  agentCtx=btn.dataset.ch;
+  localStorage.setItem('ncs-channel',agentCtx);
+  document.querySelectorAll('.ch-btn').forEach(b=>b.classList.toggle('active',b===btn));
+  renderR();
+}
+initChannel();
 </script>
 </body>
 </html>
