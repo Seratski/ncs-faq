@@ -334,9 +334,20 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 <div class="mbk" id="cm-modal">
   <div class="mbx" onclick="event.stopPropagation()">
     <div class="mhdr"><h2 id="cm-t">New FAQ</h2><button class="btn btn-sm" onclick="closeCmpModal()">✕</button></div>
-    <div class="fld"><label>FAQ title</label><input id="cm-name" placeholder="e.g. Big Bang 2025"/></div>
-    <div class="fld"><label>Markets &amp; date ranges</label>
-      <div style="border:1px solid var(--bd);border-radius:var(--r);padding:4px 14px 0;margin-top:6px;background:var(--s)" id="cm-markets"></div>
+    <!-- Step 1: type selector -->
+    <div id="cm-type-step">
+      <div class="fld" style="margin-bottom:4px"><label>What type of FAQ is this?</label></div>
+      <div id="cm-type-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px"></div>
+    </div>
+    <!-- Step 2: rest of form (shown after type selected) -->
+    <div id="cm-form-step" style="display:none">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--bd)">
+        <span id="cm-type-badge" style="font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;background:var(--s2);color:var(--mu);border:1px solid var(--bd)"></span>
+        <button class="btn btn-sm" onclick="resetCmType()" style="font-size:11px;padding:3px 10px;color:var(--hi)">Change type</button>
+      </div>
+      <div class="fld"><label>FAQ title</label><input id="cm-name" placeholder=""/></div>
+      <div class="fld"><label>Markets &amp; date ranges</label>
+        <div id="cm-markets" style="border:1px solid var(--bd);border-radius:var(--r);padding:4px 14px 0;margin-top:6px;background:var(--s)"></div>
       <div class="fhint" style="margin-top:8px">Check a market to include it. Dates are optional — leave empty for no time limit.</div>
     </div>
     <div class="fld"><label>Visibility</label>
@@ -897,16 +908,35 @@ function openCmpModal(id){
   const c=id?D.campaigns[id]||{}:{};
   document.getElementById('cm-t').textContent=id?'Edit FAQ':'New FAQ';
   document.getElementById('cm-del').style.display=id?'inline-flex':'none';
-  showCmForm(c.faqType||'campaign',c);
+  renderTypeGrid(c.faqType||null);
+  if(id){
+    // Editing: skip type step, show form directly
+    showCmForm(c.faqType||'campaign',c);
+  } else {
+    // New: show type step first
+    document.getElementById('cm-type-step').style.display='block';
+    document.getElementById('cm-form-step').style.display='none';
+  }
   document.getElementById('cm-modal').style.display='block';
-  setTimeout(()=>document.getElementById('cm-name').focus(),100);
 }
-function renderTypeGrid(selectedType){}
+function renderTypeGrid(selectedType){
+  const el=document.getElementById('cm-type-grid');
+  if(!el)return;
+  el.innerHTML=FAQ_TYPES.map(t=>
+    '<div class="type-card'+(selectedType===t.id?' selected':'')+'" onclick="selectCmType(\''+t.id+'\')">'+
+    '<div class="type-card-label">'+t.label+'</div>'+
+    '</div>'
+  ).join('');
+}
 
 function selectCmType(typeId){
+  document.getElementById('cm-type-step').style.display='none';
   showCmForm(typeId,null);
 }
-function resetCmType(){}
+function resetCmType(){
+  document.getElementById('cm-type-step').style.display='block';
+  document.getElementById('cm-form-step').style.display='none';
+}
 
 function showCmForm(typeId,c){
   const t=getType(typeId);
@@ -927,6 +957,8 @@ function showCmForm(typeId,c){
   }
   // For store types with no existing data, pre-check nothing (user picks one)
   renderCmMarkets(cMarkets);
+  document.getElementById('cm-type-badge').textContent=t.label;
+  document.getElementById('cm-form-step').style.display='block';
 }
 
 function toggleScheduledField(){
