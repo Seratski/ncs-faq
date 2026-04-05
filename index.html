@@ -691,7 +691,6 @@ function renderList(el){
 
 function forceShowAll(){rShowAll=true;const chk=document.querySelector('.sat input');if(chk)chk.checked=true;renderR();}
 function setTypeFilter(t){rTypeFilter=t;renderR();}
-function setTypeFilter(t){rTypeFilter=t;renderR();}
 function openFaqs(id){rCampId=id;rView='faqs';rCat='all';rOpen=new Set();renderR();window.scrollTo(0,0);}
 
 function renderFaqs(el){
@@ -846,7 +845,7 @@ const FAQ_TYPES=[
   {id:'january',     label:'January sale',    placeholder:'e.g. January Sales',            autoMarkets:null},
   {id:'other',       label:'Other',           placeholder:'e.g. Power Live',               autoMarkets:null},
 ];
-function getType(id){return FAQ_TYPES.find(t=>t.id===id)||FAQ_TYPES[0];}
+
 
 function toDisplayDate(iso){
   if(!iso)return'';
@@ -928,9 +927,12 @@ function showCmForm(typeId,c){
   }
   // For store types with no existing data, pre-check nothing (user picks one)
   renderCmMarkets(cMarkets);
-  document.getElementById('cm-form-step').style.display='block';
 }
 
+function toggleScheduledField(){
+  const v=document.getElementById('cm-st').value;
+  document.getElementById('cm-publish-at-wrap').style.display=v==='scheduled'?'block':'none';
+}
 function closeCmpModal(){document.getElementById('cm-modal').style.display='none';eCampId=null;}
 document.getElementById('cm-modal').onclick=e=>{if(e.target===document.getElementById('cm-modal'))closeCmpModal();};
 async function saveCampaign(){
