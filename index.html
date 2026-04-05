@@ -906,6 +906,7 @@ function toggleCmMkt(m){
   if(!chk.checked){document.getElementById('cm-s-'+m).value='';document.getElementById('cm-e-'+m).value='';}
 }
 function openCmpModal(id){
+  console.log('[FAQ] openCmpModal called, id:',id);
   eCampId=id;
   const c=id?D.campaigns[id]||{}:{};
   document.getElementById('cm-t').textContent=id?'Edit FAQ':'New FAQ';
@@ -968,7 +969,8 @@ function toggleScheduledField(){
   document.getElementById('cm-publish-at-wrap').style.display=v==='scheduled'?'block':'none';
 }
 function closeCmpModal(){document.getElementById('cm-modal').style.display='none';eCampId=null;}
-document.getElementById('cm-modal').onclick=e=>{if(e.target===document.getElementById('cm-modal'))closeCmpModal();};
+// Close campaign modal only via X button
+// document.getElementById('cm-modal').onclick=e=>{if(e.target===document.getElementById('cm-modal'))closeCmpModal();};
 async function saveCampaign(){
   const name=document.getElementById('cm-name').value.trim();
   if(!name){alert('FAQ title required.');return;}
@@ -1038,6 +1040,7 @@ function renderFaqLangTabs(){
 }
 
 function openFaqModal(campId,faqId){
+  console.log('[FAQ] openFaqModal called, campId:',campId,'faqId:',faqId);
   try{
   eFaqId=faqId;eFaqCampId=campId;srcLang='en';fTab='da';
   const f=faqId?D.faqs[faqId]||{}:{};
@@ -1113,7 +1116,8 @@ function saveSomeVariants(){
     if(inp)v.label=inp.value;
   });
 }
-document.getElementById('fm-modal').onclick=e=>{if(e.target===document.getElementById('fm-modal'))closeFaqModal();};
+// Close FAQ modal only via X button (removing backdrop click to prevent timing issues)
+// document.getElementById('fm-modal').onclick=e=>{if(e.target===document.getElementById('fm-modal'))closeFaqModal();};
 function toggleFC(co,chk){if(chk.checked){if(!fCtries.includes(co))fCtries.push(co);}else fCtries=fCtries.filter(c=>c!==co);}
 function setFaqTab(l,b){saveFT();fTab=l;renderFaqLangTabs();}
 function saveFT(){const q=document.getElementById('fm-tq')?.value.trim(),a=document.getElementById('fm-ta')?.value.trim();if(q||a)fTrans[fTab]={q:q||'',a:a||''};}
