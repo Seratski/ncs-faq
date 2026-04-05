@@ -472,7 +472,7 @@ try{
   });
 }catch(e){}
 
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);}
 function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
@@ -820,7 +820,6 @@ function renderAdmin(){
       <div class="caih" onclick="toggleC('${id}')">
         <span class="cain">${esc(c.name)}</span>
           ${c.faqType?'<span style="font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;background:var(--s2);color:var(--mu);border:1px solid var(--bd)">'+getType(c.faqType).label+'</span>':''}
-          ${c.faqType?'<span style="font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;background:var(--s2);color:var(--mu);border:1px solid var(--bd)">'+getType(c.faqType).label+'</span>':''}
         <span class="caim">
           ${mktList(c).map(co=>'<span class="ctag">'+co+'</span>').join('')}
           <span class="sb ${st}" style="position:static">${st}</span>
@@ -833,7 +832,7 @@ function renderAdmin(){
           ${c.status==='scheduled'?'<span style="color:#1a56db;font-weight:500">Scheduled: '+fmtDateTime(c.publishAt)+' ('+fmtCountdown(c.publishAt)+')</span> &nbsp;·&nbsp; ':''} ${mktList(c).map(m=>m+': '+fmtRange(mktDates(c,m))).join(' &nbsp;|&nbsp; ')+'&nbsp;·&nbsp;'}${cFaqs.length} question${cFaqs.length!==1?'s':''}
         </div>
         <div class="cfqs">
-          <div class="cfqh"><span>Questions</span><button class="btn btn-sm btn-p" onclick="openFaqModal('${id}',null)">+ Add question</button></div>
+          <div class="cfqh"><span>Questions</span><button class="btn btn-sm btn-p" onclick="event.stopPropagation();openFaqModal('${id}',null)">+ Add question</button></div>
           <div class="fail">${fhtml}</div>
         </div>
       </div>`:''}
