@@ -881,18 +881,21 @@ function renderCmMarkets(cMarkets){
   el.innerHTML=MARKETS.map(m=>{
     const d=(cMarkets&&cMarkets[m])||{};
     const on=!!(cMarkets&&cMarkets[m]);
-    return '<div class="mkt-row'+(on?' active':'')+'" id="cmr-'+m+'">'
-      +'<input type="checkbox" id="cm-'+m+'" '+(on?'checked':'')+' onchange="toggleCmMkt(\''+m+'\')">'
-      +'<div class="mkt-label-wrap">'
-      +'<span class="mkt-code">'+m+'</span>'
-      +'<span class="mkt-name">'+MLABELS[m]+'</span>'
-      +'</div>'
-      +'<div class="mkt-dates">'
-      +'<div class="mkt-date-field"><label>Start date</label><input type="text" id="cm-s-'+m+'" value="'+toDisplayDate(d.startDate||'')+'" placeholder="dd/mm/yyyy" maxlength="10" '+(on?'':'disabled')+'></div>'
-      +'<span class="mkt-sep">→</span>'
-      +'<div class="mkt-date-field"><label>End date</label><input type="text" id="cm-e-'+m+'" value="'+toDisplayDate(d.endDate||'')+'" placeholder="dd/mm/yyyy" maxlength="10" '+(on?'':'disabled')+'></div>'
-      +'</div>'
-      +'</div>';
+    const sv=d.startDate||'';
+    const ev=d.endDate||'';
+    const dis=on?'':'disabled';
+    return `<div class="mkt-row${on?' active':''}" id="cmr-${m}">
+      <input type="checkbox" id="cm-${m}" ${on?'checked':''} onchange="toggleCmMkt('${m}')">
+      <div class="mkt-label-wrap">
+        <span class="mkt-code">${m}</span>
+        <span class="mkt-name">${MLABELS[m]}</span>
+      </div>
+      <div class="mkt-dates">
+        <div class="mkt-date-field"><label>Start date</label><input type="date" id="cm-s-${m}" value="${sv}" ${dis}></div>
+        <span class="mkt-sep">→</span>
+        <div class="mkt-date-field"><label>End date</label><input type="date" id="cm-e-${m}" value="${ev}" ${dis}></div>
+      </div>
+    </div>`;
   }).join('');
 }
 function toggleCmMkt(m){
@@ -971,18 +974,13 @@ async function saveCampaign(){
   const name=document.getElementById('cm-name').value.trim();
   if(!name){alert('FAQ title required.');return;}
   const markets={};
-  let dateError=null;
   MARKETS.forEach(m=>{
     if(document.getElementById('cm-'+m)?.checked){
       const sv=document.getElementById('cm-s-'+m).value.trim();
       const ev=document.getElementById('cm-e-'+m).value.trim();
-      if(sv&&!isValidDisplayDate(sv)){dateError='Invalid start date for '+m+'. Use dd/mm/yyyy';}
-      if(ev&&!isValidDisplayDate(ev)){dateError='Invalid end date for '+m+'. Use dd/mm/yyyy';}
-      markets[m]={startDate:sv?toIsoDate(sv):null,endDate:ev?toIsoDate(ev):null};
+      markets[m]={startDate:sv||null,endDate:ev||null};
     }
-  });
-  if(dateError){alert(dateError);return;}
-  if(!Object.keys(markets).length){alert('Select at least one market.');return;}
+  });  if(!Object.keys(markets).length){alert('Select at least one market.');return;}
   const vis=document.getElementById('cm-st').value;
   let publishAt=null;
   if(vis==='scheduled'){
