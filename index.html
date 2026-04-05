@@ -378,6 +378,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
     </div>
   </div>
 </div>
+</div>
 
 <!-- FAQ Modal -->
 <div class="mbk" id="fm-modal">
@@ -906,7 +907,6 @@ function toggleCmMkt(m){
   if(!chk.checked){document.getElementById('cm-s-'+m).value='';document.getElementById('cm-e-'+m).value='';}
 }
 function openCmpModal(id){
-  console.log('[FAQ] openCmpModal called, id:',id);
   eCampId=id;
   const c=id?D.campaigns[id]||{}:{};
   document.getElementById('cm-t').textContent=id?'Edit FAQ':'New FAQ';
@@ -1040,7 +1040,6 @@ function renderFaqLangTabs(){
 }
 
 function openFaqModal(campId,faqId){
-  console.log('[FAQ] openFaqModal called, campId:',campId,'faqId:',faqId);
   try{
   eFaqId=faqId;eFaqCampId=campId;srcLang='en';fTab='da';
   const f=faqId?D.faqs[faqId]||{}:{};
@@ -1073,33 +1072,10 @@ function openFaqModal(campId,faqId){
   renderSomeVariants();
   renderTrLangChecks();
   renderFaqLangTabs();
-  console.log('[FAQ] Setting fm-modal display=block');
   document.getElementById('fm-modal').style.display='block';
-  const _m = document.getElementById('fm-modal');
-  const _cs = window.getComputedStyle(_m);
-  const _r = _m.getBoundingClientRect();
-  console.log('[FAQ] fm-modal computed:', {
-    display: _cs.display,
-    visibility: _cs.visibility,
-    opacity: _cs.opacity,
-    zIndex: _cs.zIndex,
-    position: _cs.position,
-    inset: _cs.inset || (_cs.top+','+_cs.right+','+_cs.bottom+','+_cs.left),
-    width: _r.width, height: _r.height,
-    top: _r.top, left: _r.left
-  });
-  // Check parent stacking contexts
-  let el = _m.parentElement;
-  while(el && el !== document.body) {
-    const cs = window.getComputedStyle(el);
-    if(cs.transform !== 'none' || cs.opacity !== '1' || cs.filter !== 'none' || cs.zIndex !== 'auto') {
-      console.log('[FAQ] Stacking context on parent:', el.id||el.className, {transform:cs.transform,opacity:cs.opacity,zIndex:cs.zIndex,position:cs.position});
-    }
-    el = el.parentElement;
-  }
   }catch(err){console.error('[FAQ] openFaqModal ERROR:',err);}
 }
-function closeFaqModal(){console.log('[FAQ] closeFaqModal called from:', new Error().stack?.split('\n')[2]||'unknown');saveFT();saveSomeVariants();document.getElementById('fm-modal').style.display='none';eFaqId=null;}
+function closeFaqModal(){saveFT();saveSomeVariants();document.getElementById('fm-modal').style.display='none';eFaqId=null;}
 function toggleSomeMode(){
   faqSomeMode=document.getElementById('fm-some-toggle').checked;
   document.getElementById('fm-some-section').style.display=faqSomeMode?'block':'none';
