@@ -1039,6 +1039,7 @@ function renderFaqLangTabs(){
 }
 
 function openFaqModal(campId,faqId){
+  try{
   eFaqId=faqId;eFaqCampId=campId;srcLang='en';fTab='da';
   const f=faqId?D.faqs[faqId]||{}:{};
   fTrans=JSON.parse(JSON.stringify(f.translations||{}));
@@ -1071,6 +1072,7 @@ function openFaqModal(campId,faqId){
   renderTrLangChecks();
   renderFaqLangTabs();
   document.getElementById('fm-modal').style.display='block';
+  }catch(err){console.error('openFaqModal ERROR:',err);alert('Error opening question form: '+err.message);}
 }
 function closeFaqModal(){saveFT();saveSomeVariants();document.getElementById('fm-modal').style.display='none';eFaqId=null;}
 function toggleSomeMode(){
