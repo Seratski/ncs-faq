@@ -898,37 +898,19 @@ function openCmpModal(id){
   const c=id?D.campaigns[id]||{}:{};
   document.getElementById('cm-t').textContent=id?'Edit FAQ':'New FAQ';
   document.getElementById('cm-del').style.display=id?'inline-flex':'none';
-  // Render type grid
-  renderTypeGrid(c.faqType||null);
-  if(id){
-    // Editing: skip type step, show form directly
-    showCmForm(c.faqType||'campaign',c);
-  } else {
-    // New: show type step first
-    document.getElementById('cm-type-step').style.display='block';
-    document.getElementById('cm-form-step').style.display='none';
-  }
+  showCmForm(c.faqType||'campaign',c);
   document.getElementById('cm-modal').style.display='block';
+  setTimeout(()=>document.getElementById('cm-name').focus(),100);
 }
-function renderTypeGrid(selectedType){
-  const el=document.getElementById('cm-type-grid');
-  el.innerHTML=FAQ_TYPES.map(t=>
-    '<div class="type-card'+(selectedType===t.id?' selected':'')+'" onclick="selectCmType(\''+t.id+'\')">'
-    +'<div class="type-card-label">'+t.label+'</div>'
-    +'</div>'
-  ).join('');
-}
+function renderTypeGrid(selectedType){}
+
 function selectCmType(typeId){
-  document.getElementById('cm-type-step').style.display='none';
   showCmForm(typeId,null);
 }
-function resetCmType(){
-  document.getElementById('cm-type-step').style.display='block';
-  document.getElementById('cm-form-step').style.display='none';
-}
+function resetCmType(){}
+
 function showCmForm(typeId,c){
   const t=getType(typeId);
-  document.getElementById('cm-type-badge').textContent=t.label;
   document.getElementById('cm-name').placeholder=t.placeholder;
   document.getElementById('cm-name').value=c?c.name||'':'';
   document.getElementById('cm-st').value=c?c.status||'published':'published';
@@ -938,7 +920,7 @@ function showCmForm(typeId,c){
   document.getElementById('cm-publishAt-time').value=pa?(String(pa.getHours()).padStart(2,'0')+':'+String(pa.getMinutes()).padStart(2,'0')):'';
   document.getElementById('cm-publish-at-wrap').style.display=c&&c.status==='scheduled'?'block':'none';
   // Store type selection
-  document.getElementById('cm-form-step').dataset.type=typeId;
+  document.getElementById('cm-modal').dataset.faqType=typeId;
   // Markets — auto-select single if store opening type
   let cMarkets=c?c.markets||null:null;
   if(!cMarkets&&c&&c.countries&&c.countries.length){
@@ -968,9 +950,13 @@ async function saveCampaign(){
   if(dateError){alert(dateError);return;}
   if(!Object.keys(markets).length){alert('Select at least one market.');return;}
   const vis=document.getElementById('cm-st').value;
-  const paVal=document.getElementById('cm-publishAt').value;
-  if(vis==='scheduled'&&!paVal){alert('Set a publish date and time for scheduled campaigns.');return;}
-  const publishAt=vis==='scheduled'?new Date(paVal).toISOString():null;
+  let publishAt=null;
+  if(vis==='scheduled'){
+    const paDate=document.getElementById('cm-publishAt-date').value.trim();
+    const paTime=document.getElementById('cm-publishAt-time').value.trim()||'00:00';
+    if(!paDate||!isValidDisplayDate(paDate)){alert('Set a valid publish date (dd/mm/yyyy) for scheduled FAQs.');return;}
+    publishAt=new Date(toIsoDate(paDate)+'T'+paTime+':00').toISOString();
+  }
   const pay={name,markets,status:vis,publishAt,updatedAt:Date.now()};
   if(eCampId){pay.createdAt=D.campaigns[eCampId]?.createdAt||Date.now();await fbS('/ncs-faq2/campaigns/'+eCampId,pay);}
   else{pay.createdAt=Date.now();const k=await fbP('/ncs-faq2/campaigns',pay);openC.add(k);}
