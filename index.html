@@ -1073,10 +1073,12 @@ function openFaqModal(campId,faqId){
   renderSomeVariants();
   renderTrLangChecks();
   renderFaqLangTabs();
+  console.log('[FAQ] Setting fm-modal display=block');
   document.getElementById('fm-modal').style.display='block';
-  }catch(err){console.error('openFaqModal ERROR:',err);alert('Error opening question form: '+err.message);}
+  console.log('[FAQ] fm-modal is now:', document.getElementById('fm-modal').style.display);
+  }catch(err){console.error('[FAQ] openFaqModal ERROR:',err);}
 }
-function closeFaqModal(){saveFT();saveSomeVariants();document.getElementById('fm-modal').style.display='none';eFaqId=null;}
+function closeFaqModal(){console.log('[FAQ] closeFaqModal called from:', new Error().stack?.split('\n')[2]||'unknown');saveFT();saveSomeVariants();document.getElementById('fm-modal').style.display='none';eFaqId=null;}
 function toggleSomeMode(){
   faqSomeMode=document.getElementById('fm-some-toggle').checked;
   document.getElementById('fm-some-section').style.display=faqSomeMode?'block':'none';
