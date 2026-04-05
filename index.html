@@ -913,7 +913,7 @@ function openCmpModal(id){
 function renderTypeGrid(selectedType){
   const el=document.getElementById('cm-type-grid');
   el.innerHTML=FAQ_TYPES.map(t=>
-    '<div class="type-card'+(selectedType===t.id?' selected':'')+'" onclick="selectCmType('+t.id+')">'
+    '<div class="type-card'+(selectedType===t.id?' selected':'')+'" onclick="selectCmType(\''+t.id+'\')">'
     +'<div class="type-card-label">'+t.label+'</div>'
     +'</div>'
   ).join('');
