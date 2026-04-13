@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>NCS — Customer Service FAQ</title>
-<script src="https://unpkg.com/docx@8.5.0/build/index.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@7.8.2/build/index.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
@@ -1319,7 +1319,10 @@ async function doExport() {
   btn.textContent = 'Generating...';
 
   try {
-    const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle, UnderlineType } = window.docx;
+    if (!window.docx || !window.docx.Document) {
+      throw new Error('The docx library has not loaded yet. Please wait a moment and try again, or refresh the page.');
+    }
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle } = window.docx;
 
     const ORANGE = 'f96700';
     const GREY = '888888';
@@ -1418,7 +1421,7 @@ async function doExport() {
           children: [
             new TextRun({ text: '→  ', size: 20, color: ORANGE, font: 'Arial' }),
             new TextRun({ text: u.label + ': ', size: 20, color: GREY, font: 'Arial' }),
-            new TextRun({ text: u.url, size: 20, color: '1a56db', font: 'Arial', underline: { type: UnderlineType.SINGLE } }),
+            new TextRun({ text: u.url, size: 20, color: '1a56db', font: 'Arial', underline: { type: "single" } }),
           ],
           spacing: { after: 60 },
           indent: { left: 360 }
