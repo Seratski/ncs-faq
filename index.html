@@ -1460,8 +1460,7 @@ async function doExport() {
       }]
     });
 
-    const buffer = await Packer.toBuffer(doc);
-    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    const blob = await Packer.toBlob(doc);
     const url = URL.createObjectURL(blob);
     const a_el = document.createElement('a');
     a_el.href = url;
