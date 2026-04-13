@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>NCS — Customer Service FAQ</title>
+<script src="https://unpkg.com/docx@8.5.0/build/index.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
@@ -178,6 +179,15 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .toast{position:fixed;bottom:24px;right:24px;background:#f96700;color:#fff;padding:10px 18px;border-radius:var(--r);font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .3s;z-index:999}
 .toast.show{opacity:1}
 .spin{font-size:12px;color:var(--mu);display:none}.spin.show{display:inline}
+.export-opts{display:flex;flex-direction:column;gap:16px;margin:20px 0}
+.export-row{display:flex;flex-direction:column;gap:8px}
+.export-row label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--hi)}
+.export-row select{width:100%;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--s2);border:1px solid var(--bds);border-radius:var(--rs);color:var(--tx);outline:none}
+.export-row select:focus{border-color:#f96700;background:#fff}
+.mode-btns{display:flex;border:1px solid var(--bds);border-radius:var(--rs);overflow:hidden}
+.mode-btn{flex:1;padding:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;background:none;border:none;cursor:pointer;color:var(--mu);transition:all .15s}
+.mode-btn.active{background:#f96700;color:#fff}
+.export-preview{font-size:12px;color:var(--hi);background:var(--s2);padding:10px 12px;border-radius:var(--rs);line-height:1.6;margin-top:4px}
 .type-card{padding:12px 10px;border:1px solid var(--bds);border-radius:var(--r);cursor:pointer;transition:all .15s;background:var(--s2);text-align:center}
 .type-card:hover{border-color:#f96700;background:#fff8f3}
 .type-card.selected{border-color:#f96700;background:#fff8f3}
@@ -378,6 +388,44 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
     </div>
   </div>
 </div>
+</div>
+
+<!-- Export Modal -->
+<div class="mbk" id="export-modal">
+  <div class="mbx" onclick="event.stopPropagation()" style="max-width:480px">
+    <div class="mhdr">
+      <h2>Export FAQ</h2>
+      <button class="btn btn-sm" onclick="closeExportModal()">✕</button>
+    </div>
+    <div style="font-size:13px;color:var(--mu);margin-bottom:4px">
+      Campaign: <strong id="export-camp-name"></strong>
+    </div>
+    <div id="export-faq-count" style="font-size:12px;color:var(--hi);margin-bottom:20px"></div>
+    <div class="export-opts">
+      <div class="export-row">
+        <label>Language</label>
+        <select id="export-lang" onchange="updateExportPreview()">
+          <option value="en">English (EN)</option>
+          <option value="da">Dansk (DA)</option>
+          <option value="sv">Svenska (SE)</option>
+          <option value="fi">Suomi (FI)</option>
+          <option value="no">Norsk (NO)</option>
+        </select>
+      </div>
+      <div class="export-row">
+        <label>Content type</label>
+        <div class="mode-btns">
+          <button class="mode-btn active" id="export-btn-standard" onclick="setExportMode('standard')">Standard answers</button>
+          <button class="mode-btn" id="export-btn-some" onclick="setExportMode('some')">SoMe variants</button>
+        </div>
+      </div>
+      <div class="export-preview" id="export-preview"></div>
+    </div>
+    <div class="mftr">
+      <button class="btn" onclick="closeExportModal()">Cancel</button>
+      <button class="btn btn-p" onclick="doExport()" id="export-do-btn">⬇ Download .docx</button>
+    </div>
+  </div>
 </div>
 
 <!-- FAQ Modal -->
@@ -826,6 +874,7 @@ function renderAdmin(){
           <span class="sb ${st}" style="position:static">${st}</span>
           ${c.status==='scheduled'&&c.publishAt?'<span style="font-size:11px;color:#1a56db">'+fmtDateTime(c.publishAt)+'</span>':''}
           <button class="btn btn-sm" onclick="event.stopPropagation();openCmpModal('${id}')" style="padding:4px 10px;font-size:11px">Edit</button>
+          <button class="btn btn-sm" onclick="event.stopPropagation();openExportModal('${id}')" style="padding:4px 10px;font-size:11px;color:#f96700;border-color:rgba(249,103,0,0.3)">↓ Export</button>
         </span>
       </div>
       ${isOpen?`<div class="caib">
@@ -1203,6 +1252,233 @@ async function changePin(){
 if(!fbok)renderR();
 
 // Channel init — no gate, just remember preference
+// ===== FAQ EXPORT =====
+let eExportCampId = null;
+let eExportMode = 'standard';
+
+function openExportModal(campId) {
+  eExportCampId = campId;
+  eExportMode = 'standard';
+  const camp = D.campaigns[campId] || {};
+  const faqCount = Object.values(D.faqs).filter(f => f.campaignId === campId && f.status === 'published').length;
+  document.getElementById('export-camp-name').textContent = camp.name || '';
+  document.getElementById('export-faq-count').textContent = faqCount + ' published question' + (faqCount !== 1 ? 's' : '') + ' will be exported';
+  // Set mode buttons
+  document.getElementById('export-btn-standard').classList.add('active');
+  document.getElementById('export-btn-some').classList.remove('active');
+  // Set language to first market language if available
+  const mkts = mktList(camp);
+  const mktLangMap = { DK: 'da', NO: 'no', SE: 'sv', FI: 'fi' };
+  const suggestedLang = mkts.length ? (mktLangMap[mkts[0]] || 'en') : 'en';
+  document.getElementById('export-lang').value = suggestedLang;
+  updateExportPreview();
+  document.getElementById('export-modal').style.display = 'block';
+}
+
+function closeExportModal() {
+  document.getElementById('export-modal').style.display = 'none';
+  eExportCampId = null;
+}
+
+function setExportMode(mode) {
+  eExportMode = mode;
+  document.getElementById('export-btn-standard').classList.toggle('active', mode === 'standard');
+  document.getElementById('export-btn-some').classList.toggle('active', mode === 'some');
+  updateExportPreview();
+}
+
+function updateExportPreview() {
+  if (!eExportCampId) return;
+  const lang = document.getElementById('export-lang').value;
+  const langName = LNAMES[lang] || lang;
+  const mode = eExportMode;
+  const faqs = Object.values(D.faqs).filter(f => f.campaignId === eExportCampId && f.status === 'published');
+  const someCount = faqs.filter(f => f.someMode && f.someVariants && f.someVariants.length).length;
+  let preview = '';
+  if (mode === 'standard') {
+    preview = `Each question exported with standard answer in ${langName}. URL links included where available.`;
+  } else {
+    preview = `Each question exported with all SoMe variants in ${langName}.\n${someCount} of ${faqs.length} questions have SoMe variants — questions without variants will show standard answer.`;
+  }
+  document.getElementById('export-preview').textContent = preview;
+}
+
+async function doExport() {
+  if (!eExportCampId) return;
+  const camp = D.campaigns[eExportCampId] || {};
+  const lang = document.getElementById('export-lang').value;
+  const langName = LNAMES[lang] || lang;
+  const mode = eExportMode;
+  const modeName = mode === 'standard' ? 'Standard' : 'SoMe';
+  const faqs = Object.values(D.faqs)
+    .filter(f => f.campaignId === eExportCampId && f.status === 'published')
+    .sort((a, b) => (b.publishedAt || 0) - (a.publishedAt || 0));
+
+  const btn = document.getElementById('export-do-btn');
+  btn.disabled = true;
+  btn.textContent = 'Generating...';
+
+  try {
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle, UnderlineType } = window.docx;
+
+    const ORANGE = 'f96700';
+    const GREY = '888888';
+    const DARK = '111111';
+
+    const children = [];
+
+    // ── Title ──
+    children.push(new Paragraph({
+      children: [new TextRun({ text: camp.name, bold: true, size: 36, color: DARK, font: 'Arial' })],
+      spacing: { after: 80 }
+    }));
+
+    // ── Subtitle line ──
+    const dateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    children.push(new Paragraph({
+      children: [
+        new TextRun({ text: `Language: ${langName}`, size: 20, color: GREY, font: 'Arial' }),
+        new TextRun({ text: '   ·   ', size: 20, color: GREY, font: 'Arial' }),
+        new TextRun({ text: `Type: ${modeName}`, size: 20, color: GREY, font: 'Arial' }),
+        new TextRun({ text: '   ·   ', size: 20, color: GREY, font: 'Arial' }),
+        new TextRun({ text: `Exported: ${dateStr}`, size: 20, color: GREY, font: 'Arial' }),
+      ],
+      border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: 'f96700', space: 1 } },
+      spacing: { after: 360 }
+    }));
+
+    // ── Questions ──
+    faqs.forEach((faq, i) => {
+      const t = (faq.translations && (faq.translations[lang] || faq.translations.en)) || {};
+      const q = t.q || '';
+      const a = t.a || '';
+      const urls = (faq.urls || []).filter(u => u && u.url && u.label);
+
+      // Q number + text
+      children.push(new Paragraph({
+        children: [
+          new TextRun({ text: `Q${i + 1}:  `, bold: true, size: 26, color: ORANGE, font: 'Arial' }),
+          new TextRun({ text: q, bold: true, size: 26, color: DARK, font: 'Arial' }),
+        ],
+        spacing: { before: 240, after: 120 }
+      }));
+
+      if (mode === 'standard') {
+        // Answer
+        children.push(new Paragraph({
+          children: [
+            new TextRun({ text: 'A:  ', bold: true, size: 24, color: GREY, font: 'Arial' }),
+            new TextRun({ text: a || '(no answer in this language)', size: 24, color: a ? DARK : GREY, italics: !a, font: 'Arial' }),
+          ],
+          spacing: { after: 100 },
+          indent: { left: 360 }
+        }));
+      } else {
+        // SoMe variants
+        const variants = faq.someVariants || [];
+        if (faq.someMode && variants.length) {
+          variants.forEach((v, vi) => {
+            // Get translated variant text if available
+            const transVariants = t.someVariants;
+            const varText = (transVariants && transVariants[vi] && transVariants[vi].text)
+              ? transVariants[vi].text
+              : v.text || '';
+            const varLabel = (transVariants && transVariants[vi] && transVariants[vi].label)
+              ? transVariants[vi].label
+              : v.label || `Variant ${vi + 1}`;
+
+            children.push(new Paragraph({
+              children: [new TextRun({ text: `[${varLabel}]`, bold: true, size: 22, color: ORANGE, font: 'Arial' })],
+              spacing: { before: 100, after: 60 },
+              indent: { left: 360 }
+            }));
+            children.push(new Paragraph({
+              children: [new TextRun({ text: varText || '(no text)', size: 22, color: varText ? DARK : GREY, italics: !varText, font: 'Arial' })],
+              spacing: { after: 80 },
+              indent: { left: 360 }
+            }));
+          });
+        } else {
+          // No SoMe variants - show standard answer with note
+          children.push(new Paragraph({
+            children: [
+              new TextRun({ text: 'A:  ', bold: true, size: 24, color: GREY, font: 'Arial' }),
+              new TextRun({ text: a || '(no answer)', size: 24, color: GREY, italics: true, font: 'Arial' }),
+              new TextRun({ text: '  (no SoMe variant)', size: 20, color: GREY, italics: true, font: 'Arial' }),
+            ],
+            spacing: { after: 80 },
+            indent: { left: 360 }
+          }));
+        }
+      }
+
+      // URLs
+      urls.forEach(u => {
+        children.push(new Paragraph({
+          children: [
+            new TextRun({ text: '→  ', size: 20, color: ORANGE, font: 'Arial' }),
+            new TextRun({ text: u.label + ': ', size: 20, color: GREY, font: 'Arial' }),
+            new TextRun({ text: u.url, size: 20, color: '1a56db', font: 'Arial', underline: { type: UnderlineType.SINGLE } }),
+          ],
+          spacing: { after: 60 },
+          indent: { left: 360 }
+        }));
+      });
+
+      // Divider between questions (except last)
+      if (i < faqs.length - 1) {
+        children.push(new Paragraph({
+          children: [new TextRun({ text: '', font: 'Arial' })],
+          border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: 'e0e0e0', space: 1 } },
+          spacing: { before: 200, after: 200 }
+        }));
+      }
+    });
+
+    // Empty doc message
+    if (!faqs.length) {
+      children.push(new Paragraph({
+        children: [new TextRun({ text: 'No published questions in this FAQ.', size: 24, color: GREY, italics: true, font: 'Arial' })]
+      }));
+    }
+
+    const doc = new Document({
+      styles: {
+        default: { document: { run: { font: 'Arial', size: 24 } } }
+      },
+      sections: [{
+        properties: {
+          page: {
+            size: { width: 11906, height: 16838 }, // A4
+            margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } // ~2cm margins
+          }
+        },
+        children
+      }]
+    });
+
+    const buffer = await Packer.toBuffer(doc);
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    const url = URL.createObjectURL(blob);
+    const a_el = document.createElement('a');
+    a_el.href = url;
+    const safeName = (camp.name || 'FAQ').replace(/[^a-zA-Z0-9_-]/g, '_');
+    a_el.download = `${safeName}_${lang.toUpperCase()}_${modeName}.docx`;
+    document.body.appendChild(a_el);
+    a_el.click();
+    document.body.removeChild(a_el);
+    URL.revokeObjectURL(url);
+    closeExportModal();
+    toast('Exported successfully');
+  } catch (e) {
+    console.error('Export error:', e);
+    alert('Export failed: ' + e.message + '\n\nMake sure the page has finished loading.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '⬇ Download .docx';
+  }
+}
+
 function initChannel(){
   const saved=localStorage.getItem('ncs-channel');
   if(saved==='some'){
