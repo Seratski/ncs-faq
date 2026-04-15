@@ -429,6 +429,18 @@ input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(0.5) sepia(1
 .kanban-card-progress{height:2px;background:var(--bg4);border-radius:2px;overflow:hidden;margin-top:5px;}
 .kanban-card-progress-fill{height:100%;background:var(--green);border-radius:2px;}
 @media(max-width:700px){.kanban-board{grid-template-columns:1fr;height:auto;overflow:visible;}}
+.link-item-row{display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--bg3);border-radius:6px;border:1px solid var(--border);margin-bottom:5px;}
+.link-item-name{flex:1;font-size:12px;color:var(--accent);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.link-item-url{font-size:10px;color:var(--text3);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px;}
+.link-item-del{background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:2px 4px;border-radius:3px;flex-shrink:0;}
+.link-item-del:hover{color:var(--red);}
+.link-add-row{display:flex;flex-direction:column;gap:6px;margin-top:4px;}
+.link-add-row .row2{display:flex;gap:6px;}
+.task-link-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.25);border-radius:10px;font-size:11px;color:#7aadff;text-decoration:none;font-family:var(--mono);}
+.task-link-chip:hover{background:rgba(79,142,247,0.18);border-color:var(--accent);}
+.detail-links{display:flex;flex-wrap:wrap;gap:6px;}
+.detail-link-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;font-size:13px;color:var(--accent);text-decoration:none;transition:all .12s;}
+.detail-link-btn:hover{border-color:var(--accent);background:var(--accent-glow);}
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:10px;}
@@ -501,6 +513,17 @@ input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(0.5) sepia(1
         <input class="form-input" id="actionText" placeholder="Action item…" />
         <select class="form-select" id="actionAssignee"></select>
         <button class="btn btn-ghost btn-sm" onclick="addActionItem()" style="flex-shrink:0;">+ Add</button>
+      </div>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Links <span class="form-hint">name + URL</span></label>
+      <div id="modalLinksList"></div>
+      <div class="link-add-row">
+        <input class="form-input" id="modalLinkName" placeholder="Link name (e.g. Power DK)" />
+        <div class="row2">
+          <input class="form-input" id="modalLinkUrl" placeholder="https://…" style="flex:1;" />
+          <button class="btn btn-ghost btn-sm" onclick="addModalLink()" style="flex-shrink:0;">+ Add</button>
+        </div>
       </div>
     </div>
     <div class="form-field">
@@ -671,6 +694,17 @@ input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(0.5) sepia(1
               <div style="display:flex;gap:6px;">
                 <select class="form-select" id="richActionAssignee" style="flex:1;"></select>
                 <button class="btn btn-orange btn-sm" onclick="addRichAction()" style="flex-shrink:0;">+ Add</button>
+              </div>
+            </div>
+          </div>
+          <div class="rich-section-label">Links</div>
+          <div class="rich-field">
+            <div id="richLinksList"></div>
+            <div class="link-add-row">
+              <input class="form-input" id="richLinkName" placeholder="Link name (e.g. Power DK)" />
+              <div class="row2">
+                <input class="form-input" id="richLinkUrl" placeholder="https://…" style="flex:1;" />
+                <button class="btn btn-ghost btn-sm" onclick="addRichLink()" style="flex-shrink:0;">+ Add</button>
               </div>
             </div>
           </div>
@@ -1064,7 +1098,7 @@ function taskHTML(t){
         +'<span class="task-title">'+escHtml(t.title||'(No title)')+richIcon+'</span>'
         
       +'</div>'
-      +(tags||t.date?'<div class="task-tags-row">'+tags+(t.date?'<span class="task-date-inline'+(isOverdue(t.date)?' overdue':'')+'" >'+formatDate(t.date)+(isOverdue(t.date)?' ⚠':'')+'</span>':'')+'</div>':'')
+      +(tags||t.date||(t.links&&t.links.length)?'<div class="task-tags-row">'+tags+(t.date?'<span class="task-date-inline'+(isOverdue(t.date)?' overdue':'')+'" >'+formatDate(t.date)+(isOverdue(t.date)?' ⚠':'')+'</span>':'')+(t.links&&t.links.length?t.links.map(function(l){return '<a class="task-link-chip" href="'+escHtml(l.url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 '+escHtml(l.name)+'</a>';}).join(''):'')+'</div>':'')
       +(t.note?'<div class="task-note-row" onclick="toggleNote(this)" title="Click to expand">'+escHtml(t.note)+'</div>':'')
       +actionBar
       +attachHTML(t)
@@ -1078,6 +1112,16 @@ function taskHTML(t){
 }
 
 function attachHTML(t) {
+  const links = t.links || [];
+  if (links.length) {
+    body += '<div class="detail-section">';
+    body += '<div class="detail-section-label">Links</div>';
+    body += '<div class="detail-links">';
+    links.forEach(function(l) {
+      body += '<a class="detail-link-btn" href="'+escHtml(l.url)+'" target="_blank" rel="noopener">🔗 '+escHtml(l.name)+'</a>';
+    });
+    body += '</div></div>';
+  }
   const atts = t.attachments || [];
   if (!atts.length) return '';
   return '<div class="task-attachments">'
@@ -1146,6 +1190,51 @@ function renderActionItems(){
       +'</div>';
   }).join('');
 }
+// ── LINKS ──
+let fLinks=[], rLinks=[];
+
+function renderModalLinks(){
+  document.getElementById('modalLinksList').innerHTML=fLinks.map(function(l,i){
+    return '<div class="link-item-row">'
+      +'<span class="link-item-name">🔗 '+escHtml(l.name)+'</span>'
+      +'<span class="link-item-url">'+escHtml(l.url)+'</span>'
+      +'<button class="link-item-del" onclick="removeModalLink('+i+')">✕</button>'
+      +'</div>';
+  }).join('');
+}
+function addModalLink(){
+  var name=document.getElementById('modalLinkName').value.trim();
+  var url=document.getElementById('modalLinkUrl').value.trim();
+  if(!url)return;
+  if(!url.startsWith('http'))url='https://'+url;
+  fLinks.push({name:name||url,url:url});
+  document.getElementById('modalLinkName').value='';
+  document.getElementById('modalLinkUrl').value='';
+  renderModalLinks();
+}
+function removeModalLink(i){fLinks.splice(i,1);renderModalLinks();}
+
+function renderRichLinks(){
+  document.getElementById('richLinksList').innerHTML=rLinks.map(function(l,i){
+    return '<div class="link-item-row">'
+      +'<span class="link-item-name">🔗 '+escHtml(l.name)+'</span>'
+      +'<span class="link-item-url">'+escHtml(l.url)+'</span>'
+      +'<button class="link-item-del" onclick="removeRichLink('+i+')">✕</button>'
+      +'</div>';
+  }).join('');
+}
+function addRichLink(){
+  var name=document.getElementById('richLinkName').value.trim();
+  var url=document.getElementById('richLinkUrl').value.trim();
+  if(!url)return;
+  if(!url.startsWith('http'))url='https://'+url;
+  rLinks.push({name:name||url,url:url});
+  document.getElementById('richLinkName').value='';
+  document.getElementById('richLinkUrl').value='';
+  renderRichLinks();richAutoSave();
+}
+function removeRichLink(i){rLinks.splice(i,1);renderRichLinks();richAutoSave();}
+
 function addActionItem(){
   const t=document.getElementById('actionText').value.trim();if(!t)return;
   fActions.push({text:t,assignee:document.getElementById('actionAssignee').value||'',done:false});
@@ -1155,7 +1244,7 @@ function toggleModalAction(i){fActions[i].done=!fActions[i].done;renderActionIte
 function removeAction(i){fActions.splice(i,1);renderActionItems();}
 
 function openModal(){
-  editingId=null;fSites=[];fPersons=[];fProjects=[];fActions=[];modalAttachments=[];renderAttachPreview('modal');
+  editingId=null;fSites=[];fPersons=[];fProjects=[];fActions=[];fLinks=[];modalAttachments=[];renderAttachPreview('modal');renderModalLinks();
   document.getElementById('modalTitle').textContent='New task';
   document.getElementById('fTitle').value='';document.getElementById('fNote').value='';
   document.getElementById('fPriority').value='none';document.getElementById('fDate').value=new Date().toISOString().slice(0,10);
@@ -1164,7 +1253,7 @@ function openModal(){
 }
 function openEdit(id){
   const t=tasks.find(x=>x.id===id);if(!t)return;
-  editingId=id;fSites=[...(t.sites||[])];fPersons=[...(t.persons||[])];fProjects=[...(t.tags||[])];fActions=JSON.parse(JSON.stringify(t.actions||[]));modalAttachments=JSON.parse(JSON.stringify(t.attachments||[]));renderAttachPreview('modal');
+  editingId=id;fSites=[...(t.sites||[])];fPersons=[...(t.persons||[])];fProjects=[...(t.tags||[])];fActions=JSON.parse(JSON.stringify(t.actions||[]));fLinks=JSON.parse(JSON.stringify(t.links||[]));modalAttachments=JSON.parse(JSON.stringify(t.attachments||[]));renderAttachPreview('modal');renderModalLinks();
   document.getElementById('modalTitle').textContent='Edit task';
   document.getElementById('fTitle').value=t.title||'';document.getElementById('fNote').value=t.note||'';
   document.getElementById('fPriority').value=t.priority||'none';document.getElementById('fDate').value=t.date||'';
@@ -1173,7 +1262,7 @@ function openEdit(id){
 function closeModal(){document.getElementById('taskOverlay').classList.add('hidden');editingId=null;}
 async function saveTask(){
   const title=document.getElementById('fTitle').value.trim();if(!title){document.getElementById('fTitle').focus();return;}
-  const data={title,note:document.getElementById('fNote').value.trim(),priority:document.getElementById('fPriority').value,date:document.getElementById('fDate').value,sites:[...fSites],persons:[...fPersons],tags:[...fProjects],actions:JSON.parse(JSON.stringify(fActions)),attachments:JSON.parse(JSON.stringify(modalAttachments)),done:false,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+  const data={title,note:document.getElementById('fNote').value.trim(),priority:document.getElementById('fPriority').value,date:document.getElementById('fDate').value,sites:[...fSites],persons:[...fPersons],tags:[...fProjects],actions:JSON.parse(JSON.stringify(fActions)),links:JSON.parse(JSON.stringify(fLinks)),attachments:JSON.parse(JSON.stringify(modalAttachments)),done:false,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
   const newPTs=fProjects.filter(p=>!projectTasks.includes(p));
   if(newPTs.length)await db.collection('meta').doc('projectTasks').set({list:[...projectTasks,...newPTs]});
   if(editingId){await db.collection('tasks').doc(editingId).update(data);showToast('Updated ✓');}
@@ -1234,14 +1323,14 @@ function openRichEditor(id){
     document.getElementById('richBody').value=t.richBody||t.note||'';
     document.getElementById('richPriority').value=t.priority||'none';
     document.getElementById('richDate').value=t.date||'';
-    rSites=[...(t.sites||[])];rPersons=[...(t.persons||[])];rProjects=[...(t.tags||[])];rActions=JSON.parse(JSON.stringify(t.actions||[]));richAttachments=JSON.parse(JSON.stringify(t.attachments||[]));renderAttachPreview('rich');
+    rSites=[...(t.sites||[])];rPersons=[...(t.persons||[])];rProjects=[...(t.tags||[])];rActions=JSON.parse(JSON.stringify(t.actions||[]));rLinks=JSON.parse(JSON.stringify(t.links||[]));richAttachments=JSON.parse(JSON.stringify(t.attachments||[]));renderAttachPreview('rich');renderRichLinks();
     document.getElementById('richTaskStatus').textContent='Editing saved task';
   }else{
     document.getElementById('richTitle').value='';
     document.getElementById('richBody').value='';
     document.getElementById('richPriority').value='none';
     document.getElementById('richDate').value=new Date().toISOString().slice(0,10);
-    rSites=[];rPersons=[];rProjects=[];rActions=[];richAttachments=[];renderAttachPreview('rich');
+    rSites=[];rPersons=[];rProjects=[];rActions=[];rLinks=[];richAttachments=[];renderAttachPreview('rich');renderRichLinks();
     document.getElementById('richTaskStatus').textContent='Draft — not saved yet';
   }
   renderRichChips();
@@ -1272,6 +1361,7 @@ async function saveRichTask(){
     date:document.getElementById('richDate').value,
     sites:[...rSites],persons:[...rPersons],tags:[...rProjects],
     actions:JSON.parse(JSON.stringify(rActions)),
+    links:JSON.parse(JSON.stringify(rLinks)),
     attachments:JSON.parse(JSON.stringify(richAttachments)),
     done:false,
     updatedAt:firebase.firestore.FieldValue.serverTimestamp()
@@ -1543,6 +1633,8 @@ document.getElementById('richProjectInput').addEventListener('keydown',e=>{
 });
 document.getElementById('richProjectTagWrap').addEventListener('click',()=>document.getElementById('richProjectInput').focus());
 document.getElementById('richActionText').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addRichAction();}});
+document.getElementById('modalLinkUrl').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addModalLink();}});
+document.getElementById('richLinkUrl').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addRichLink();}});
 document.getElementById('richDate').addEventListener('change',richAutoSave);
 document.getElementById('richPriority').addEventListener('change',richAutoSave);
 document.getElementById('newSiteInput').addEventListener('keydown',e=>{if(e.key==='Enter')addSite();});
